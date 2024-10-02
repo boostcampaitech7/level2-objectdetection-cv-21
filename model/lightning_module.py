@@ -6,6 +6,7 @@ from timm.data import Mixup
 from timm.loss import LabelSmoothingCrossEntropy, SoftTargetCrossEntropy
 from timm.scheduler import create_scheduler_v2
 from timm.scheduler.cosine_lr import CosineLRScheduler
+from torchmetrics.detection.mean_ap import MeanAveragePrecision
 
 from .model_factory import create_model
 from config import ModelConfig
@@ -13,7 +14,7 @@ from config import ModelConfig
 
 
 # 라이트닝 모듈 정의
-class LightningModule(pl.LightningModule):
+class DetectionLightningModule(pl.LightningModule):
     def __init__(self, hparams, config: ModelConfig = None):
         """
         라이트닝 모듈 초기화.
@@ -27,22 +28,23 @@ class LightningModule(pl.LightningModule):
         hparams = {**hparams, **model_hparams}
         self.save_hyperparameters(hparams)
         self.model = create_model(**model_hparams)
-        self.mixup_fn = Mixup(
-            mixup_alpha=self.hparams.mixup, cutmix_alpha=self.hparams.cutmix,
-            prob=self.hparams.mixup_prob, switch_prob=self.hparams.mixup_switch_prob,
-            label_smoothing=self.hparams.smoothing, num_classes=500)
 
-    def forward(self, x):
-        """
-        모델의 순전파 정의.
+        self.map = MeanAveragePrecision(
+            box_format="xyxy",
+            iou_thresholds=[0.5],
+            class_metrics=True
+        )
 
-        Args:
-            x (torch.Tensor): 입력 텐서.
+        # self.mixup_fn = Mixup(
+        #     mixup_alpha=self.hparams.mixup, cutmix_alpha=self.hparams.cutmix,
+        #     prob=self.hparams.mixup_prob, switch_prob=self.hparams.mixup_switch_prob,
+        #     label_smoothing=self.hparams.smoothing, num_classes=500)
 
-        Returns:
-            torch.Tensor: 출력 텐서.
-        """
-        return self.model(x)
+    def forward(self, x, y=None):
+        if y is not None:
+            return self.model(x, y)
+        else:
+            return self.model(x)
 
     def training_step(self, train_batch, batch_idx):
         """
@@ -56,12 +58,11 @@ class LightningModule(pl.LightningModule):
             dict: 손실값을 포함하는 딕셔너리.
         """
         x, y = train_batch
-        x, y = self.mixup_fn(x, y)
-        output = self.forward(x)
-        # origin loss
-        # loss = torch.nn.CrossEntropyLoss(label_smoothing=self.hparams.smoothing)(output, y)
-        # loss = LabelSmoothingCrossEntropy(smoothing=self.hparams.smoothing)(output, y)
-        loss = SoftTargetCrossEntropy()(output, y)
+        output = self.forward(x, y)
+        if isinstance(output, dict):
+            loss = sum(output.values()) # Faster RCNN처럼 다중 loss인 경우
+        else:
+            loss = output
 
         self.log("train_loss", loss, sync_dist=True)
         return {"loss": loss}
@@ -78,12 +79,19 @@ class LightningModule(pl.LightningModule):
             None
         """
         x, y = val_batch
-        output = self.forward(x)
-        loss = torch.nn.CrossEntropyLoss()(output, y)
-        _, predicted = torch.max(output, 1)
-        accuracy = (predicted == y).sum().item() / len(x)
+        output = self.forward(x, y)
+        if isinstance(output, dict):
+            loss = sum(output.values()) # Faster RCNN처럼 다중 loss인 경우
+        else:
+            loss = output
         self.log("val_loss", loss, sync_dist=True)
-        self.log("val_acc", accuracy, sync_dist=True)
+        self.map.update(output, y)
+        return {"loss": sum(loss.values())}
+    
+    def on_validation_epoch_end(self, val_step_outputs):
+        map_value = self.map.compute()
+        self.log("map50", map_value["map_50"].item(), sync_dist=True)
+        self.map.reset()
 
     def test_step(self, test_batch, batch_idx):
         """
@@ -107,18 +115,6 @@ class LightningModule(pl.LightningModule):
                     }
                 )
         return outputs
-    
-    # 참고용 베이스라인 코드 원본
-    # def inference_fn(test_data_loader, model, device):
-    #     print("Inferencing starts!")
-    #     outputs = []
-    #     for images in tqdm(test_data_loader):
-    #         # gpu 계산을 위해 image.to(device)
-    #         images = list(image.to(device) for image in images)
-    #         output = model(images) 
-    #         for out in output:
-    #             outputs.append({'boxes': out['boxes'].tolist(), 'scores': out['scores'].tolist(), 'labels': out['labels'].tolist()})
-    #     return outputs
 
     def configure_optimizers(self):
         """
