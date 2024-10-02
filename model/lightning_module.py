@@ -14,7 +14,7 @@ from config import ModelConfig
 
 
 # 라이트닝 모듈 정의
-class LightningModule(pl.LightningModule):
+class DetectionLightningModule(pl.LightningModule):
     def __init__(self, hparams, config: ModelConfig = None):
         """
         라이트닝 모듈 초기화.
