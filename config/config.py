@@ -27,7 +27,7 @@ class TrainingConfig:
         # 하이퍼파라미터 튜닝에 사용할 배치 크기 목록입니다
         self.batch_size = tune.choice([32, 64]) # nvidia-smi로 gpu 사용량을 관찰하면서 조정해야함
         # 하이퍼파라미터 튜닝에 사용할 학습률 범위입니다
-        self.lr = tune.loguniform(1e-5, 2e-4) # 너무 작으면 학습 진행이 안되며, 너무 크면 수렴이 느림. 
+        self.lr = tune.loguniform(1e-5, 2e-4) # 너무 작으면 학습 진행이 안되며, 너무 크면 수렴이 느림.
         # 하이퍼파라미터 튜닝에 사용할 가중치 감소 범위입니다
         self.weight_decay = tune.loguniform(0.001, 0.1)
 
@@ -48,13 +48,12 @@ class TrainingConfig:
         self.mixup_prob = 1.0
         # 믹스업과 컷믹스 동시 사용시 전환될 확률
         self.mixup_switch_prob = 0.5
-        
         # 학습 Loss 관련 파라미터
         # Label smoothing 파라미터
         self.smoothing = 0.1
-        
+
         # 자동 혼합 정밀도 사용
-        self.use_amp = True  
+        self.use_amp = True
 
 
 class DatasetConfig:
@@ -76,7 +75,7 @@ class DatasetConfig:
         # AutoAugment 정책 파라미터
         self.aa = 'rand-m9-mstd0.5-inc1'
 
-        
+
 
 
 class ExperimentConfig:
@@ -113,7 +112,7 @@ class ExperimentConfig:
 
         # 앙상블 관련
         # 다수의 모델 체크포인트가 들어있는 폴더 경로(한 폴더에 전부 들어있어야 함)
-        self.ensemble_path = None  
+        self.ensemble_path = None
         # 앙상블 메써드(uniform_soup, greedy_soup, ensemble_predict)
         self.ensemble_method = 'ensemble_predict'
 
