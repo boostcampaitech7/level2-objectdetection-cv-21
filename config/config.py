@@ -14,9 +14,7 @@ class ModelConfig:
         self.pretrained = True
         # 모델에서 경로를 줄일 확률
         self.drop_path_rate = 0.0
-        # 모델의 레이어 수 (현재 사용하지 않음)
         # self.num_layers = ~
-        # 모델의 어텐션 헤드의 수 (현재 사용하지 않음)
         # self.num_heads = ~
 
 

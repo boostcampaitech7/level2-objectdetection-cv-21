@@ -5,7 +5,7 @@ from torch.utils.data import DataLoader
 from sklearn.model_selection import train_test_split
 
 from .dataset import CocoDetectionDataset
-
+from .transforms import TransformSelector
 
 def get_dataloaders(config):
     """
@@ -39,17 +39,27 @@ def get_dataloaders(config):
         random_state=42
     )
 
+    transform_selector = TransformSelector(
+        input_size=config.dataset.input_size, 
+        transform_type=config.dataset.transform_type,
+        aa=config.dataset.aa
+    )
+
     # Create datasets
+    train_transform = transform_selector.get_transforms(is_train=True)
     train_dataset = CocoDetectionDataset(
         data_path=config.dataset.data_path,
         ann_file=ann_file,
-        image_ids=train_ids
+        image_ids=train_ids,
+        transform=train_transform
     )
 
+    val_transform = transform_selector.get_transforms(is_train=False)
     val_dataset = CocoDetectionDataset(
         data_path=config.dataset.data_path,
         ann_file=ann_file,
-        image_ids=val_ids
+        image_ids=val_ids,
+        transform=val_transform
     )
 
     # Create data loaders
@@ -87,9 +97,18 @@ def get_test_loader(config):
     """
     ann_file = os.path.join(config.dataset.data_path, 'test.json')
     
+    transform_selector = TransformSelector(
+        input_size=config.dataset.input_size, 
+        transform_type=config.dataset.transform_type,
+        aa=config.dataset.aa
+    )
+    
+    transform = transform_selector.get_transforms(is_train=False)
+    
     test_dataset = CocoDetectionDataset(
         data_path=config.dataset.data_path,
         ann_file=ann_file,
+        transform=transform,
         is_inference=True
     )
     
@@ -123,5 +142,4 @@ def detection_collate_fn(batch):
     
     if img_ids:
         return images, targets, img_ids
-    
     return images, targets

@@ -1,105 +1,88 @@
 import os
-
-import cv2
-from PIL import Image
+import torch
+import numpy as np
 from torch.utils.data import Dataset
-from torchvision import transforms
+from pycocotools.coco import COCO
+from PIL import Image
 
 
-class CustomDataset(Dataset):
-    def __init__(self, data_path, info_df, transform=None, is_inference: bool = False):
+class CocoDetectionDataset(Dataset):
+    """
+    Dataset class for loading COCO format object detection datasets
+    """
+    # data_path ex : './home/dataset' 
+    def __init__(self, data_path, ann_file, image_ids=None, is_inference=False):
         """
-        Initializes the CustomDataset class.
-
         Args:
-        - data_path (str): Path to the dataset.
-        - info_df (str): The index information dataframe.
-        - transform (transforms.Compose): The transforms to be applied to the images (default: None).
+            data_path (str): Root directory of the dataset
+            ann_file (str): Path to annotation file (train.json or test.json)
+            image_ids (list): Optional list of image ids to use
+            is_inference (bool): Whether the dataset is for inference
         """
-
         self.data_path = data_path
-        self.info_df = info_df
         self.is_inference = is_inference
-        self.transform = transform
-        self.image_paths = self.info_df["image_path"].tolist()
-        self.tta_transforms = [
-            transforms.Compose([
-                transforms.Resize((224, 224)), 
-                transforms.ToTensor(), 
-                transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-            ]),
-            transforms.Compose([
-                transforms.Resize((224, 224)), 
-                transforms.RandomHorizontalFlip(p=1),
-                transforms.ToTensor(), 
-                transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-            ]),
-            transforms.Compose([
-                transforms.Resize((224, 224)), 
-                transforms.ColorJitter(brightness=0.2, contrast=0.2),
-                transforms.ToTensor(), 
-                transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-            ]),
-            transforms.Compose([
-                transforms.Resize((224, 224)), 
-                transforms.RandomRotation(15),
-                transforms.ToTensor(), 
-                transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-            ]),
-            transforms.Compose([
-                transforms.Resize((224, 224)), 
-                transforms.CenterCrop(224),
-                transforms.ToTensor(), 
-                transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-            ]),
-        ]
-
-        if not self.is_inference:
-            self.labels = self.info_df[
-                "target"
-            ].tolist()  # Read image paths from test.csv
-
-    def _load_image(self, image_path):
-        image = cv2.imread(
-            image_path, cv2.IMREAD_COLOR
-        )  # 이미지를 BGR 컬러 포맷의 numpy array로 읽어옵니다.
-        image = cv2.cvtColor(
-            image, cv2.COLOR_BGR2RGB
-        )  # BGR 포맷을 RGB 포맷으로 변환합니다.
-        return image
-
-    def _apply_transform(self, image):
-        if self.transform:
-            image = self.transform(image)
-        return image
+        
+        # Initialize COCO api
+        self.coco = COCO(ann_file)
+        
+        # Set image ids
+        self.image_ids = image_ids if image_ids is not None else list(self.coco.imgs.keys())
+        
+        # Determine if we're using train or test images
+        self.image_dir = 'train' if 'train.json' in ann_file else 'test'
     
-    def _apply_transform_tta(self, image, tta_transform):
-        image = Image.fromarray(image)
-        if self.transform:
-            image = tta_transform(image)
-        return image
-
-    def __getitem__(self, index):
-        """
-        Returns the image and label at the specified index.
-
-        Args:
-        - index (int): The index of the image and label.
-
-        Returns:
-        - image: The image at the specified index.
-        - label: The label at the specified index (Not returned if in 'test' mode).
-        """
-        image_path = os.path.join(self.data_path, self.image_paths[index])
-        image = self._load_image(image_path)
-
-        if self.is_inference:
-            tta_images = [self._apply_transform_tta(image, tta_transform) for tta_transform in self.tta_transforms]
-            return tta_images
-        else:
-            image = self._apply_transform(image)
-            label = self.labels[index]
-            return image, label
-
     def __len__(self):
-        return len(self.image_paths)
+        return len(self.image_ids)
+    
+    def __getitem__(self, idx):
+        # Get image id and load image
+        img_id = self.image_ids[idx]
+        img_info = self.coco.imgs[img_id]
+        
+        # Load image from correct directory
+        img_path = os.path.join(self.data_path, self.image_dir, img_info['file_name'])
+        image = Image.open(img_path).convert('RGB')
+        
+        # Convert PIL image to tensor
+        image = torch.from_numpy(np.array(image)).permute(2, 0, 1).float() / 255.0
+        
+        # Verify image size
+        assert image.shape[1:] == (1024, 1024), f"Image {img_path} size is not 1024x1024"
+        
+        # Get annotations
+        ann_ids = self.coco.getAnnIds(imgIds=img_id)
+        anns = self.coco.loadAnns(ann_ids)
+        
+        # Prepare target
+        boxes = []
+        labels = []
+        areas = []
+        iscrowd = []
+        
+        for ann in anns:
+            bbox = ann['bbox']
+            # Convert [x, y, w, h] to [x1, y1, x2, y2]
+            bbox = [
+                bbox[0],
+                bbox[1],
+                bbox[0] + bbox[2],
+                bbox[1] + bbox[3]
+            ]
+            boxes.append(bbox)
+            labels.append(ann['category_id'])
+            areas.append(ann['area'])
+            iscrowd.append(ann['iscrowd'])
+        
+        # Convert to tensor
+        target = {
+            'boxes': torch.as_tensor(boxes, dtype=torch.float32),
+            'labels': torch.as_tensor(labels, dtype=torch.int64),
+            'image_id': torch.tensor([img_id]),
+            'area': torch.as_tensor(areas, dtype=torch.float32),
+            'iscrowd': torch.as_tensor(iscrowd, dtype=torch.int64)
+        }
+        
+        if self.is_inference:
+            return image, target, img_id
+        
+        return image, target
