@@ -23,7 +23,6 @@ class ObjectDetectionModel(nn.Module):
         in_features = self.model.roi_heads.box_predictor.cls_score.in_features
         # replace the pre-trained head with a new one
         self.model.roi_heads.box_predictor = FastRCNNPredictor(in_features, num_classes)
-        self.model.to(self.device)
 
     def forward(self, images, targets=None):
         """
@@ -37,7 +36,9 @@ class ObjectDetectionModel(nn.Module):
         Returns:
             Model predictions or losses depending on whether targets are provided
         """
-        images = [image.to(self.device) for image in images]
+        # images = [image.to(self.device) for image in images]
         if targets:
-            targets = [{k: v.to(self.device) for k, v in t.items()} for t in targets]
-        return self.model(images, targets)
+            # targets = [{k: v.to(self.device) for k, v in t.items()} for t in targets]
+            return self.model(images, targets)
+        else:
+            return self.model(images)

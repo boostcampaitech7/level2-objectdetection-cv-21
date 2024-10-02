@@ -6,15 +6,15 @@ from pycocotools.coco import COCO
 from PIL import Image
 
 # Customize your path
-DATA_PATH = "../data.tar.gz/dataset/train"
-ANN_PATH = "../data.tar.gz/dataset/train.json"
+# DATA_PATH = "../data.tar.gz/dataset/train"
+# ANN_PATH = "../data.tar.gz/dataset/train.json"
 
 class CocoDetectionDataset(Dataset):
     """
     Dataset class for loading COCO format object detection datasets
     """
-    def __init__(self, data_path=DATA_PATH,
-        ann_file=ANN_PATH,
+    def __init__(self, data_path="./",
+        ann_file="./",
         image_ids=None,
         is_inference=False):
         """
