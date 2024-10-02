@@ -123,5 +123,4 @@ def detection_collate_fn(batch):
     
     if img_ids:
         return images, targets, img_ids
-    
     return images, targets
