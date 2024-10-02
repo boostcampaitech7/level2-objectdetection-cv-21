@@ -85,23 +85,6 @@ class LightningModule(pl.LightningModule):
         self.log("val_loss", loss, sync_dist=True)
         self.log("val_acc", accuracy, sync_dist=True)
 
-
-    # def test_step(self, test_batch, batch_idx):
-    #     """
-    #     모델의 예측 스텝 정의.
-
-    #     Args:
-    #         test_batch (tuple): 입력 텐서 배치.
-    #         batch_idx (int): 배치 인덱스.
-
-    #     Returns:
-    #         list: 예측된 클래스 인덱스 목록.
-    #     """
-    #     x = test_batch
-    #     output = self.forward(x)
-    #     _, predicted = torch.max(output, 1)
-    #     return predicted
-
     def test_step(self, test_batch, batch_idx):
         """
         모델의 예측 스텝 정의.
@@ -114,16 +97,28 @@ class LightningModule(pl.LightningModule):
             list: 예측된 클래스 인덱스 목록.
         """
         outputs = []
-        for image in test_batch:
-            output = self.forward(image) #torch.Size([64, 3, 224, 224])
-            #print(output.shape)
-            outputs.append(output)
-        outputs = torch.mean(torch.stack(outputs), dim=0)
-        #print(outputs.shape)
-        #outputs = torch.cat(outputs, dim=0)
-        #outputs = torch.mean(outputs, dim=0)
-        # _, predicted = torch.max(outputs, 1)
+        output = self.forward(test_batch)
+        for out in output:
+            outputs.append(
+                {
+                    'boxes': out['boxes'].tolist(), 
+                    'scores': out['scores'].tolist(), 
+                    'labels': out['labels'].tolist()
+                    }
+                )
         return outputs
+    
+    # 참고용 베이스라인 코드 원본
+    # def inference_fn(test_data_loader, model, device):
+    #     print("Inferencing starts!")
+    #     outputs = []
+    #     for images in tqdm(test_data_loader):
+    #         # gpu 계산을 위해 image.to(device)
+    #         images = list(image.to(device) for image in images)
+    #         output = model(images) 
+    #         for out in output:
+    #             outputs.append({'boxes': out['boxes'].tolist(), 'scores': out['scores'].tolist(), 'labels': out['labels'].tolist()})
+    #     return outputs
 
     def configure_optimizers(self):
         """
