@@ -31,7 +31,7 @@ def run_test(config, ckpt_dir):
 
     # 체크포인트에서 모델 로드
     best_model = LightningModule.load_from_checkpoint(
-        f"{ckpt_dir}/checkpoint_DeiT3_ori0.ckpt", config=config.model
+        f"{ckpt_dir}/checkpoint.ckpt", config=config.model
     )
 
     # 로드된 모델 테스팅 수행
