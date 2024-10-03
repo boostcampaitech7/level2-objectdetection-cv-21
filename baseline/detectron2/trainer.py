@@ -49,9 +49,9 @@ def load_and_fix_config():
 
     cfg.MODEL.WEIGHTS = model_zoo.get_checkpoint_url('COCO-Detection/faster_rcnn_R_101_FPN_3x.yaml')
 
-    cfg.SOLVER.IMS_PER_BATCH = 4
+    cfg.SOLVER.IMS_PER_BATCH = 4 # Batch size
     cfg.SOLVER.BASE_LR = 0.001
-    cfg.SOLVER.MAX_ITER = 15000
+    cfg.SOLVER.MAX_ITER = 100 # 100 for smoke test, 15000 is approximately 6.15 epochs.
     cfg.SOLVER.STEPS = (8000,12000)
     cfg.SOLVER.GAMMA = 0.005
     cfg.SOLVER.CHECKPOINT_PERIOD = 3000
@@ -103,7 +103,7 @@ class MyTrainer(DefaultTrainer):
         )
     
     @classmethod
-    def build_evaluator(cls, cfg, dataset_name, output_folder=None):
+    def build_evaluator(cls, cfg, dataset_name, output_folder=OUTPUT_DIR):
         if output_folder is None:
             os.makedirs('./output_eval', exist_ok = True)
             output_folder = './output_eval'
