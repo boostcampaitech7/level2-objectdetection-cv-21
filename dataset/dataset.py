@@ -39,7 +39,7 @@ class CocoDetectionDataset(Dataset):
         img_info = self.coco.imgs[img_id]
 
         # Load image from correct directory
-        img_path = os.path.join(self.data_path, self.image_dir, img_info['file_name'])
+        img_path = os.path.join(self.data_path, img_info['file_name'])
         image = Image.open(img_path).convert('RGB')
 
         # Convert PIL image to tensor
@@ -82,7 +82,7 @@ class CocoDetectionDataset(Dataset):
         }
 
         if self.is_inference:
-            return image, target, img_id
+            return image
 
-        return image, target
+        return image, target, img_id
     
