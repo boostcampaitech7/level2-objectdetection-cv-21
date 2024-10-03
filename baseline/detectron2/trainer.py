@@ -10,6 +10,8 @@ from detectron2.data import detection_utils as utils
 from detectron2.utils.logger import setup_logger
 setup_logger()
 
+import wandb, yaml
+
 from detectron2 import model_zoo
 from detectron2.config import get_cfg
 from detectron2.engine import DefaultTrainer
@@ -80,6 +82,7 @@ def load_and_fix_config():
     cfg.MODEL.ROI_HEADS.NUM_CLASSES = 10
 
     cfg.TEST.EVAL_PERIOD = 3000
+
     return cfg
 
 
@@ -134,6 +137,14 @@ class MyTrainer(DefaultTrainer):
 def main():
     register_dataset()
     cfg = load_and_fix_config()
+
+    cfg.wandb_project = "Object Detection"
+    cfg.wandb_name = MODEL_YAML
+    cfg_wandb = yaml.safe_load(cfg.dump())
+
+    wandb.init(project=cfg.wandb_project, name=str(cfg.wandb_name), config=cfg_wandb)
+    wandb_id = wandb.run.id
+
 
     # train
     os.makedirs(cfg.OUTPUT_DIR, exist_ok = True)
