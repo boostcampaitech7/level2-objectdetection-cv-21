@@ -126,7 +126,7 @@ def main():
     cfg = load_and_fix_config()
 
     # train
-    os.makedirs(cfg.OUPUT_DIR, exist_ok = True)
+    os.makedirs(cfg.OUTPUT_DIR, exist_ok = True)
 
     trainer = MyTrainer(cfg)
     trainer.resume_or_load(resume=False)
