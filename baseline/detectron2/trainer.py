@@ -1,5 +1,8 @@
 import os
 import copy
+import uuid
+import datetime
+
 import torch
 import detectron2
 import detectron2.data.transforms as T
@@ -17,7 +20,7 @@ from detectron2.data import build_detection_test_loader, build_detection_train_l
 
 # 상수 값들: 학습 전체에서 고정으로 쓰이며, 변하지 않음
 DATA_DIR = '/data/ephemeral/home/dataset/'
-OUTPUT_DIR = '/data/ephemeral/home/output/detectron2'
+OUTPUT_DIR = '/data/ephemeral/home/output/detectron2/'
 TRAIN_JSON = 'train.json'
 TEST_JSON  = 'test.json'
 
@@ -51,12 +54,17 @@ def load_and_fix_config():
 
     cfg.SOLVER.IMS_PER_BATCH = 4 # Batch size
     cfg.SOLVER.BASE_LR = 0.001
-    cfg.SOLVER.MAX_ITER = 100 # 100 for smoke test, 15000 is approximately 6.15 epochs.
+    cfg.SOLVER.MAX_ITER = 15000 # 100 for smoke test, 15000 is approximately 6.15 epochs.
     cfg.SOLVER.STEPS = (8000,12000)
     cfg.SOLVER.GAMMA = 0.005
     cfg.SOLVER.CHECKPOINT_PERIOD = 3000
 
-    cfg.OUTPUT_DIR = OUTPUT_DIR
+    # 시간+랜덤 코드 5자리로 결과 폴더명 생성
+    timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    random_code = str(uuid.uuid4())[:5]
+    experiment_name = f"{timestamp}_{random_code}"
+    experiment_dir = os.path.join(OUTPUT_DIR, experiment_name)
+    cfg.OUTPUT_DIR = experiment_dir
 
     cfg.MODEL.ROI_HEADS.BATCH_SIZE_PER_IMAGE = 128
     cfg.MODEL.ROI_HEADS.NUM_CLASSES = 10
@@ -103,10 +111,11 @@ class MyTrainer(DefaultTrainer):
         )
     
     @classmethod
-    def build_evaluator(cls, cfg, dataset_name, output_folder=OUTPUT_DIR):
+    def build_evaluator(cls, cfg, dataset_name, output_folder=None):
         if output_folder is None:
-            os.makedirs('./output_eval', exist_ok = True)
-            output_folder = './output_eval'
+            eval_folder = os.path.join(cfg.OUTPUT_DIR, "output_eval")
+            os.makedirs(eval_folder, exist_ok = True)
+            output_folder = eval_folder
             
         return COCOEvaluator(dataset_name, cfg, False, output_folder)
     
@@ -117,7 +126,7 @@ def main():
     cfg = load_and_fix_config()
 
     # train
-    os.makedirs(cfg.OUTPUT_DIR, exist_ok = True)
+    os.makedirs(cfg.OUPUT_DIR, exist_ok = True)
 
     trainer = MyTrainer(cfg)
     trainer.resume_or_load(resume=False)
