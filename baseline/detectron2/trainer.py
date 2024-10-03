@@ -21,7 +21,8 @@ from detectron2.data import build_detection_test_loader, build_detection_train_l
 # 상수 값들: 학습 전체에서 고정으로 쓰이며, 변하지 않음
 DATA_DIR = '/data/ephemeral/home/dataset/'
 OUTPUT_DIR = '/data/ephemeral/home/output/detectron2/'
-TRAIN_JSON = 'train.json'
+TRAIN_JSON = 'train2.json'
+VAL_JSON = 'val2.json'
 TEST_JSON  = 'test.json'
 # MODEL_YAML = 'Misc/cascade_mask_rcnn_X_152_32x8d_FPN_IN5k_gn_dconv'->nvcc 컴파일러가 없으면 사용 불가
 # MODEL_YAML = 'COCO-Detection/faster_rcnn_R_101_FPN_3x'->기존 코드
@@ -35,7 +36,7 @@ def register_dataset():
         pass
 
     try:
-        register_coco_instances('coco_trash_test', {}, os.path.join(DATA_DIR, TEST_JSON), DATA_DIR)
+        register_coco_instances('coco_trash_test', {}, os.path.join(DATA_DIR, VAL_JSON), DATA_DIR)
     except AssertionError:
         pass
 
