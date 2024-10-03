@@ -55,9 +55,9 @@ def get_dataloaders(config):
     # Create data loaders
     train_loader = DataLoader(
         train_dataset,
-        batch_size=config.dataset.batch_size,
+        batch_size=config.training.batch_size,
         shuffle=True,
-        num_workers=config.dataset.num_workers,
+        num_workers=3,
         pin_memory=True,
         drop_last=True,
         collate_fn=detection_collate_fn
@@ -65,9 +65,9 @@ def get_dataloaders(config):
 
     val_loader = DataLoader(
         val_dataset,
-        batch_size=config.dataset.batch_size,
+        batch_size=config.training.batch_size,
         shuffle=False,
-        num_workers=config.dataset.num_workers,
+        num_workers=3,
         pin_memory=True,
         collate_fn=detection_collate_fn
     )
@@ -95,8 +95,8 @@ def get_test_loader(config):
 
     test_loader = DataLoader(
         test_dataset,
-        batch_size=config.dataset.batch_size,
-        num_workers=config.dataset.num_workers,
+        batch_size=config.training.batch_size,
+        num_workers=3,
         pin_memory=True,
         collate_fn=detection_collate_fn
     )

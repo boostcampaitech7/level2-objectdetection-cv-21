@@ -14,7 +14,7 @@ from ray.train.lightning import (
     prepare_trainer,
 )
 from dataset import get_dataloaders
-from model import LightningModule
+from model import DetectionModule
 from ray.train.torch import TorchTrainer
 
 
@@ -130,11 +130,10 @@ class RayTuner:
         # 데이터 로더 생성
         train_loader, val_loader = get_dataloaders(
             self.config,
-            batch_size=hparams["batch_size"],
         )
 
         # 모델 생성
-        model = LightningModule(hparams, config=self.config.model)
+        model = DetectionModule(hparams, config=self.config.model)
 
         # PyTorch Lightning Trainer 정의
         trainer = self._define_pltrainer()
