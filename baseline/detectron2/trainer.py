@@ -58,10 +58,10 @@ def load_and_fix_config():
 
     cfg.MODEL.WEIGHTS = model_zoo.get_checkpoint_url(f'{MODEL_YAML}.yaml')
 
-    cfg.SOLVER.IMS_PER_BATCH = 4 # Batch size
+    cfg.SOLVER.IMS_PER_BATCH = 32 # Batch size
     cfg.SOLVER.BASE_LR = 0.001
-    cfg.SOLVER.MAX_ITER = 100 # 100 for smoke test, 15000 is approximately 6.15 epochs.
-    cfg.SOLVER.STEPS = (8000,12000)
+    cfg.SOLVER.MAX_ITER = 12000 # 100 for smoke test, 15000 is approximately 6.15 epochs.
+    cfg.SOLVER.STEPS = (6000,9000)
     cfg.SOLVER.GAMMA = 0.005
     cfg.SOLVER.CHECKPOINT_PERIOD = 3000
 
