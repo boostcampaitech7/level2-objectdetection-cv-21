@@ -48,16 +48,19 @@ def load_and_fix_config():
     cfg.DATASETS.TRAIN = ('coco_trash_train',)
     cfg.DATASETS.TEST = ('coco_trash_test',)
 
-    cfg.DATALOADER.NUM_WOREKRS = 2
+    cfg.DATALOADER.NUM_WORKERS = 2
 
     cfg.MODEL.WEIGHTS = model_zoo.get_checkpoint_url('COCO-Detection/faster_rcnn_R_101_FPN_3x.yaml')
 
     cfg.SOLVER.IMS_PER_BATCH = 4 # Batch size
     cfg.SOLVER.BASE_LR = 0.001
-    cfg.SOLVER.MAX_ITER = 15000 # 100 for smoke test, 15000 is approximately 6.15 epochs.
+    cfg.SOLVER.MAX_ITER = 100 # 100 for smoke test, 15000 is approximately 6.15 epochs.
     cfg.SOLVER.STEPS = (8000,12000)
     cfg.SOLVER.GAMMA = 0.005
     cfg.SOLVER.CHECKPOINT_PERIOD = 3000
+
+    # AMP 사용 여부 확인
+    cfg.SOLVER.AMP.ENABLED = True
 
     # 시간+랜덤 코드 5자리로 결과 폴더명 생성
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
@@ -65,6 +68,9 @@ def load_and_fix_config():
     experiment_name = f"{timestamp}_{random_code}"
     experiment_dir = os.path.join(OUTPUT_DIR, experiment_name)
     cfg.OUTPUT_DIR = experiment_dir
+
+    if 'ROI_KEYPOINT' in cfg.MODEL.ROI_HEADS:
+        cfg.MODEL.ROI_KEYPOINT_HEAD.NUM_KEYPOINTS = 0
 
     cfg.MODEL.ROI_HEADS.BATCH_SIZE_PER_IMAGE = 128
     cfg.MODEL.ROI_HEADS.NUM_CLASSES = 10
