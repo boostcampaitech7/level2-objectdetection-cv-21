@@ -16,11 +16,10 @@ from detectron2.evaluation import COCOEvaluator
 from detectron2.data import build_detection_test_loader, build_detection_train_loader
 
 # 상수 값들: 학습 전체에서 고정으로 쓰이며, 변하지 않음
-DATA_DIR ='/data/ephemeral/home/dataset/'
+DATA_DIR = '/data/ephemeral/home/dataset/'
+OUTPUT_DIR = '/data/ephemeral/home/output/detectron2'
 TRAIN_JSON = 'train.json'
 TEST_JSON  = 'test.json'
-
-
 
 # Register Dataset
 def register_dataset():
@@ -57,7 +56,7 @@ def load_and_fix_config():
     cfg.SOLVER.GAMMA = 0.005
     cfg.SOLVER.CHECKPOINT_PERIOD = 3000
 
-    cfg.OUTPUT_DIR = './output'
+    cfg.OUTPUT_DIR = OUTPUT_DIR
 
     cfg.MODEL.ROI_HEADS.BATCH_SIZE_PER_IMAGE = 128
     cfg.MODEL.ROI_HEADS.NUM_CLASSES = 10
