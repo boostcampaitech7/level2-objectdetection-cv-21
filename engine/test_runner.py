@@ -2,7 +2,7 @@ from lightning import Trainer
 
 from .callbacks import PredictionCallback
 from dataset import get_test_loader
-from model import LightningModule
+from model import DetectionModule
 
 
 def run_test(config, ckpt_dir):
@@ -30,7 +30,7 @@ def run_test(config, ckpt_dir):
     )
 
     # 체크포인트에서 모델 로드
-    best_model = LightningModule.load_from_checkpoint(
+    best_model = DetectionModule.load_from_checkpoint(
         f"{ckpt_dir}/checkpoint.ckpt", config=config.model
     )
 

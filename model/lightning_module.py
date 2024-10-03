@@ -14,7 +14,7 @@ from config import ModelConfig
 
 
 # 라이트닝 모듈 정의
-class DetectionLightningModule(pl.LightningModule):
+class DetectionModule(pl.LightningModule):
     def __init__(self, hparams, config: ModelConfig = None):
         """
         라이트닝 모듈 초기화.
@@ -57,15 +57,12 @@ class DetectionLightningModule(pl.LightningModule):
         Returns:
             dict: 손실값을 포함하는 딕셔너리.
         """
-        x, y = train_batch
+        x, y, _ = train_batch
         output = self.forward(x, y)
-        if isinstance(output, dict):
-            loss = sum(output.values()) # Faster RCNN처럼 다중 loss인 경우
-        else:
-            loss = output
+        losses = sum(loss for loss in output.values()) # Faster RCNN처럼 다중 loss인 경우
 
-        self.log("train_loss", loss, sync_dist=True)
-        return {"loss": loss}
+        self.log("train_loss", losses, sync_dist=True)
+        return {"loss": losses}
 
     def validation_step(self, val_batch, batch_idx):
         """
@@ -78,15 +75,14 @@ class DetectionLightningModule(pl.LightningModule):
         Returns:
             None
         """
-        x, y = val_batch
-        output = self.forward(x, y)
-        if isinstance(output, dict):
-            loss = sum(output.values()) # Faster RCNN처럼 다중 loss인 경우
-        else:
-            loss = output
-        self.log("val_loss", loss, sync_dist=True)
-        self.map.update(output, y)
-        return {"loss": sum(loss.values())}
+        images, targets, _ = val_batch
+        images = list(image.float() for image in images)
+        targets = [{k: v for k, v in t.items()} for t in targets]
+        output = self.forward(images, targets)
+        losses = sum(loss for loss in output.values()) # Faster RCNN처럼 다중 loss인 경우
+        self.log("val_loss", losses, sync_dist=True)
+        self.map.update(output, targets)
+        return {"loss": losses}
     
     def on_validation_epoch_end(self, val_step_outputs):
         map_value = self.map.compute()

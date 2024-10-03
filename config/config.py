@@ -9,7 +9,7 @@ class ModelConfig:
 
     def __init__(self):
         # 사용하는 모델의 유형입니다 (예: ResNet18, ResNet50 등)
-        self.model_name = "ResNet18"  # 기본 모델
+        self.model_name = "FasterRCNNRes50"  # 기본 모델
         # 모델이 미리 학습되어 있는지 여부입니다
         self.pretrained = True
         # 모델에서 경로를 줄일 확률
@@ -25,7 +25,7 @@ class TrainingConfig:
 
     def __init__(self):
         # 하이퍼파라미터 튜닝에 사용할 배치 크기 목록입니다
-        self.batch_size = tune.choice([32, 64]) # nvidia-smi로 gpu 사용량을 관찰하면서 조정해야함
+        self.batch_size = 32 # nvidia-smi로 gpu 사용량을 관찰하면서 조정해야함
         # 하이퍼파라미터 튜닝에 사용할 학습률 범위입니다
         self.lr = tune.loguniform(1e-5, 2e-4) # 너무 작으면 학습 진행이 안되며, 너무 크면 수렴이 느림.
         # 하이퍼파라미터 튜닝에 사용할 가중치 감소 범위입니다
@@ -63,7 +63,7 @@ class DatasetConfig:
 
     def __init__(self):
         # 데이터셋 경로입니다
-        self.data_path = "/data/ephemeral/home/data/"
+        self.data_path = "/data/ephemeral/home/dataset/"
         # 데이터 변환 유형입니다 (torchvision, alubmentations, autoaugment)
         self.transform_type = "albumentations"
         # 이미지 크기입니다
