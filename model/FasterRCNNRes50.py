@@ -2,7 +2,7 @@ import torch.nn as nn
 import torchvision
 from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
 
-class ObjectDetectionModel(nn.Module):
+class FasterRCNNRes50(nn.Module):
     """
     A custom object detection model based on Faster R-CNN with ResNet-50 backbone.
 
@@ -14,10 +14,10 @@ class ObjectDetectionModel(nn.Module):
         model (torchvision.models): The underlying Faster R-CNN model
     """
 
-    def __init__(self, num_classes=11, device='cuda'):
-        super(ObjectDetectionModel, self).__init__()
+    def __init__(self, num_classes=11, device='cuda', **kwargs):
+        super(FasterRCNNRes50, self).__init__()
         self.device = device
-        self.model = torchvision.models.detection.fasterrcnn_resnet50_fpn(pretrained=True)
+        self.model = torchvision.models.detection.fasterrcnn_resnet50_fpn(pretrained=kwargs["pretrained"])
 
         # get number of input features for the classifier
         in_features = self.model.roi_heads.box_predictor.cls_score.in_features
@@ -36,9 +36,7 @@ class ObjectDetectionModel(nn.Module):
         Returns:
             Model predictions or losses depending on whether targets are provided
         """
-        # images = [image.to(self.device) for image in images]
-        if targets:
-            # targets = [{k: v.to(self.device) for k, v in t.items()} for t in targets]
+        if targets is not None:
             return self.model(images, targets)
         else:
             return self.model(images)
