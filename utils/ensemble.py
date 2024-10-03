@@ -5,7 +5,7 @@ import pandas as pd
 import numpy as np
 from sklearn.model_selection import StratifiedKFold
 import torch
-from model import LightningModule
+from model import DetectionModule
 from lightning import Trainer
 
 from dataset import get_test_loader
@@ -31,7 +31,7 @@ class EnsemblePredictor:
                 checkpoint = torch.load(ckpt_file)
                 hparam = checkpoint.hparam
                 self.config.model.model_name = hparam.model_name
-                model = LightningModule.load_from_checkpoint(os.path.join(self.ckpt_dir, ckpt_file), config=self.config.model)
+                model = DetectionModule.load_from_checkpoint(os.path.join(self.ckpt_dir, ckpt_file), config=self.config.model)
                 models.append(model)
         return models
 
