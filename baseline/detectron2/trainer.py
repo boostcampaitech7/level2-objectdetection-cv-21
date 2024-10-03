@@ -23,6 +23,9 @@ DATA_DIR = '/data/ephemeral/home/dataset/'
 OUTPUT_DIR = '/data/ephemeral/home/output/detectron2/'
 TRAIN_JSON = 'train.json'
 TEST_JSON  = 'test.json'
+# MODEL_YAML = 'Misc/cascade_mask_rcnn_X_152_32x8d_FPN_IN5k_gn_dconv'->nvcc 컴파일러가 없으면 사용 불가
+# MODEL_YAML = 'COCO-Detection/faster_rcnn_R_101_FPN_3x'->기존 코드
+MODEL_YAML = 'PascalVOC-Detection/faster_rcnn_R_50_C4'
 
 # Register Dataset
 def register_dataset():
@@ -42,7 +45,7 @@ def register_dataset():
 def load_and_fix_config():
     # config 불러오기
     cfg = get_cfg()
-    cfg.merge_from_file(model_zoo.get_config_file('COCO-Detection/faster_rcnn_R_101_FPN_3x.yaml'))
+    cfg.merge_from_file(model_zoo.get_config_file(f'{MODEL_YAML}.yaml'))
 
     # config 수정하기
     cfg.DATASETS.TRAIN = ('coco_trash_train',)
@@ -50,7 +53,7 @@ def load_and_fix_config():
 
     cfg.DATALOADER.NUM_WORKERS = 2
 
-    cfg.MODEL.WEIGHTS = model_zoo.get_checkpoint_url('COCO-Detection/faster_rcnn_R_101_FPN_3x.yaml')
+    cfg.MODEL.WEIGHTS = model_zoo.get_checkpoint_url(f'{MODEL_YAML}.yaml')
 
     cfg.SOLVER.IMS_PER_BATCH = 4 # Batch size
     cfg.SOLVER.BASE_LR = 0.001
@@ -69,7 +72,7 @@ def load_and_fix_config():
     experiment_dir = os.path.join(OUTPUT_DIR, experiment_name)
     cfg.OUTPUT_DIR = experiment_dir
 
-    if 'ROI_KEYPOINT' in cfg.MODEL.ROI_HEADS:
+    if 'ROI_KEYPOINT_HEAD' in cfg.MODEL:
         cfg.MODEL.ROI_KEYPOINT_HEAD.NUM_KEYPOINTS = 0
 
     cfg.MODEL.ROI_HEADS.BATCH_SIZE_PER_IMAGE = 128
