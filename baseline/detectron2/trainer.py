@@ -62,10 +62,10 @@ def load_and_fix_config():
 
     cfg.SOLVER.IMS_PER_BATCH = 32 # Batch size
     cfg.SOLVER.BASE_LR = 0.001
-    cfg.SOLVER.MAX_ITER = 5 # 100 for smoke test, 15000 is approximately 6.15 epochs.
-    cfg.SOLVER.STEPS = (6000,9000)
+    cfg.SOLVER.MAX_ITER = 36000 # 100 for smoke test, 15000 is approximately 6.15 epochs.
+    cfg.SOLVER.STEPS = (12000,24000)
     cfg.SOLVER.GAMMA = 0.005
-    cfg.SOLVER.CHECKPOINT_PERIOD = 3000
+    cfg.SOLVER.CHECKPOINT_PERIOD = 6000
 
     # AMP 사용 여부 확인
     cfg.SOLVER.AMP.ENABLED = True
@@ -83,8 +83,8 @@ def load_and_fix_config():
     cfg.MODEL.ROI_HEADS.BATCH_SIZE_PER_IMAGE = 128
     cfg.MODEL.ROI_HEADS.NUM_CLASSES = 10
 
-    # cfg.TEST.EVAL_PERIOD = 3906//cfg.SOLVER.IMS_PER_BATCH
-    cfg.TEST.EVAL_PERIOD = cfg.SOLVER.MAX_ITER
+    cfg.TEST.EVAL_PERIOD = 3906//cfg.SOLVER.IMS_PER_BATCH
+    # cfg.TEST.EVAL_PERIOD = 1
 
     return cfg
 
@@ -155,11 +155,10 @@ class WandbLoggerHook(HookBase):
         self.iter += 1
         if self.iter % self.log_period == 0:
             storage = get_event_storage()
-            for k, v in storage.latest_with_smoothing_hint(20).items():
-                wandb.log({f"{k}": v[0]}, step=storage.iter)
-            # metrics = self.trainer._trainer_storage.get_metrics()
-            # metrics = {k: np.mean(v) for k, v in metrics.items()}
-            # wandb.log(metrics)
+            wandb.log({
+                k: v for k, (v, iter) in storage.latest_with_smoothing_hint(20).items()
+                }, 
+                step=storage.iter)
             
     def after_train(self):
         wandb.finish()
