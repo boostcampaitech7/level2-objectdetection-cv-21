@@ -7,6 +7,7 @@ import torch
 import detectron2
 import detectron2.data.transforms as T
 from detectron2.data import detection_utils as utils
+from detectron2.utils.events import get_event_storage
 from detectron2.utils.logger import setup_logger
 setup_logger()
 
@@ -14,7 +15,7 @@ import wandb, yaml
 
 from detectron2 import model_zoo
 from detectron2.config import get_cfg
-from detectron2.engine import DefaultTrainer
+from detectron2.engine import DefaultTrainer, HookBase
 from detectron2.data import DatasetCatalog, MetadataCatalog
 from detectron2.data.datasets import register_coco_instances
 from detectron2.evaluation import COCOEvaluator
@@ -29,6 +30,7 @@ TEST_JSON  = 'test.json'
 # MODEL_YAML = 'Misc/cascade_mask_rcnn_X_152_32x8d_FPN_IN5k_gn_dconv'->nvcc 컴파일러가 없으면 사용 불가
 # MODEL_YAML = 'COCO-Detection/faster_rcnn_R_101_FPN_3x'->기존 코드
 MODEL_YAML = 'PascalVOC-Detection/faster_rcnn_R_50_C4'
+MODEL_NAME = MODEL_YAML.split('/')[-1]
 
 # Register Dataset
 def register_dataset():
@@ -60,7 +62,7 @@ def load_and_fix_config():
 
     cfg.SOLVER.IMS_PER_BATCH = 32 # Batch size
     cfg.SOLVER.BASE_LR = 0.001
-    cfg.SOLVER.MAX_ITER = 12000 # 100 for smoke test, 15000 is approximately 6.15 epochs.
+    cfg.SOLVER.MAX_ITER = 5 # 100 for smoke test, 15000 is approximately 6.15 epochs.
     cfg.SOLVER.STEPS = (6000,9000)
     cfg.SOLVER.GAMMA = 0.005
     cfg.SOLVER.CHECKPOINT_PERIOD = 3000
@@ -81,7 +83,8 @@ def load_and_fix_config():
     cfg.MODEL.ROI_HEADS.BATCH_SIZE_PER_IMAGE = 128
     cfg.MODEL.ROI_HEADS.NUM_CLASSES = 10
 
-    cfg.TEST.EVAL_PERIOD = 3000
+    # cfg.TEST.EVAL_PERIOD = 3906//cfg.SOLVER.IMS_PER_BATCH
+    cfg.TEST.EVAL_PERIOD = cfg.SOLVER.MAX_ITER
 
     return cfg
 
@@ -133,17 +136,41 @@ class MyTrainer(DefaultTrainer):
         return COCOEvaluator(dataset_name, cfg, False, output_folder)
     
 
+class WandbLoggerHook(HookBase):
+    def __init__(self, project=None, log_period=100, config=None):
+        self.project = project
+        self.log_period = log_period
+        self.iter = 0
+        self.config = config
+        self._setup_wandb()
+
+    def _setup_wandb(self):
+        # Initialize WandB project
+        wandb.init(project=self.project, config=self.config)
+
+    def before_train(self):
+        self.iter = 0
+
+    def after_step(self):
+        self.iter += 1
+        if self.iter % self.log_period == 0:
+            storage = get_event_storage()
+            for k, v in storage.latest_with_smoothing_hint(20).items():
+                wandb.log({f"{k}": v[0]}, step=storage.iter)
+            # metrics = self.trainer._trainer_storage.get_metrics()
+            # metrics = {k: np.mean(v) for k, v in metrics.items()}
+            # wandb.log(metrics)
+            
+    def after_train(self):
+        wandb.finish()
 
 def main():
     register_dataset()
     cfg = load_and_fix_config()
 
-    cfg.wandb_project = "Object Detection"
-    cfg.wandb_name = MODEL_YAML
     cfg_wandb = yaml.safe_load(cfg.dump())
-
-    wandb.init(project=cfg.wandb_project, name=str(cfg.wandb_name), config=cfg_wandb)
-    wandb_id = wandb.run.id
+    
+    wandb_logger = WandbLoggerHook(project=MODEL_NAME, log_period=cfg.TEST.EVAL_PERIOD, config=cfg_wandb)
 
 
     # train
@@ -151,6 +178,7 @@ def main():
 
     trainer = MyTrainer(cfg)
     trainer.resume_or_load(resume=False)
+    trainer.register_hooks([wandb_logger])
     trainer.train()
 
 if __name__=="__main__":
