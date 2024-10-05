@@ -29,7 +29,8 @@ VAL_JSON = 'val2.json'
 TEST_JSON  = 'test.json'
 # MODEL_YAML = 'Misc/cascade_mask_rcnn_X_152_32x8d_FPN_IN5k_gn_dconv'->nvcc 컴파일러가 없으면 사용 불가
 # MODEL_YAML = 'COCO-Detection/faster_rcnn_R_101_FPN_3x'->기존 코드
-MODEL_YAML = 'PascalVOC-Detection/faster_rcnn_R_50_C4'
+# MODEL_YAML = 'PascalVOC-Detection/faster_rcnn_R_50_C4'
+MODEL_YAML = 'COCO-Detection/retinanet_R_101_FPN_3x'
 MODEL_NAME = MODEL_YAML.split('/')[-1]
 
 # Register Dataset
@@ -60,7 +61,7 @@ def load_and_fix_config():
 
     cfg.MODEL.WEIGHTS = model_zoo.get_checkpoint_url(f'{MODEL_YAML}.yaml')
 
-    cfg.SOLVER.IMS_PER_BATCH = 32 # Batch size
+    cfg.SOLVER.IMS_PER_BATCH = 16 # Batch size
     cfg.SOLVER.BASE_LR = 0.001
     cfg.SOLVER.MAX_ITER = 36000 # 100 for smoke test, 15000 is approximately 6.15 epochs.
     cfg.SOLVER.STEPS = (12000,24000)
@@ -82,6 +83,8 @@ def load_and_fix_config():
 
     cfg.MODEL.ROI_HEADS.BATCH_SIZE_PER_IMAGE = 128
     cfg.MODEL.ROI_HEADS.NUM_CLASSES = 10
+    cfg.MODEL.RETINANET.BATCH_SIZE_PER_IMAGE = 128
+    cfg.MODEL.RETINANET.NUM_CLASSES = 10
 
     cfg.TEST.EVAL_PERIOD = 3906//cfg.SOLVER.IMS_PER_BATCH
     # cfg.TEST.EVAL_PERIOD = 1
@@ -155,6 +158,9 @@ class WandbLoggerHook(HookBase):
         self.iter += 1
         if self.iter % self.log_period == 0:
             storage = get_event_storage()
+            # print('Something HERE',{
+            #     k: v for k, (v, iter) in storage.latest_with_smoothing_hint(20).items()
+            #     })
             wandb.log({
                 k: v for k, (v, iter) in storage.latest_with_smoothing_hint(20).items()
                 }, 
