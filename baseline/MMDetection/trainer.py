@@ -23,7 +23,7 @@ CONFIG_DIR = '/data/ephemeral/home/mmdetection/configs/faster_rcnn/faster_rcnn_r
 DATA_DIR = '/data/ephemeral/home/dataset/'
 OUTPUT_DIR = '/data/ephemeral/home/output/mmdetection/'
 NUM_CLASSES = 10  # Number of classes in the dataset
-MODEL_NAME = 'faster_rcnn'
+MODEL_NAME = 'faster_rcnn_r50_fpn_1x_coco'
 
 def create_config() -> tuple[Config, str, str]:
     """MMDetection 설정 생성"""
@@ -70,17 +70,17 @@ def create_config() -> tuple[Config, str, str]:
     # 옵티마이저 설정
     cfg.optimizer = dict(type='AdamW', lr=0.001, weight_decay=0.0001)
     cfg.optimizer_config.grad_clip = dict(max_norm=35, norm_type=2)
-    cfg.checkpoint_config = dict(max_keep_ckpts=3, interval=1)
+    cfg.checkpoint_config = dict(max_keep_ckpts=1, interval=1)
     cfg.device = get_device()
 
     cfg.log_config.hooks = [
         dict(type='TextLoggerHook'),
         dict(type='MMDetWandbHook',
-             init_kwargs={'project': MODEL_NAME, 'config': cfg._cfg_dict.to_dict()},
+             init_kwargs={'project': "Object Detection", 'name':f'{MODEL_NAME}_{random_code}','config': cfg._cfg_dict.to_dict()},
              interval=1,
              log_checkpoint=True,
              log_checkpoint_metadata=True,
-             num_eval_images=50,
+             num_eval_images=10,
              bbox_score_thr=0.05,
              )
     ]

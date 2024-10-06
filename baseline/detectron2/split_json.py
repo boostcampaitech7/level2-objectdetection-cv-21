@@ -12,6 +12,7 @@ annotations = data['annotations']
 # Create a dictionary to map image IDs to their corresponding annotations
 image_annotations = {}
 for annotation in annotations:
+    annotation['segmentation'] = [[0, 0, 0, 0, 0, 0, 0, 0]]
     image_annotations.setdefault(annotation['image_id'], []).append(annotation)
 
 # Split the images and their corresponding annotations
