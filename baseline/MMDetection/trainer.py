@@ -1,29 +1,37 @@
 import os
 import uuid
 import datetime
-import wandb
-from dataset.dataset import CocoDetectionDataset
 
 # MMDetection과 MMEngine 패키지 설치 확인
 try:
-    from mmengine.config import Config
-    from mmengine.runner import Runner
+    from mmcv import Config
+    from mmdet.datasets import build_dataset
+    from mmdet.models import build_detector
+    from mmdet.apis import train_detector
+    from mmdet.datasets import (build_dataloader, build_dataset,
+                                replace_ImageToTensor)
+    from mmdet.utils import get_device
 except ImportError:
     raise ImportError(
         "MMDetection 관련 패키지가 설치되지 않았습니다. "
         "다음 명령어로 설치해주세요: "
-        "pip install -U openmim && mim install mmengine mmdet"
+        "pip install -U openmim&&mim install mmdet"
     )
 
 # 상수 정의
+CONFIG_DIR = '/data/ephemeral/home/mmdetection/configs/faster_rcnn/faster_rcnn_r50_fpn_1x_coco.py'
 DATA_DIR = '/data/ephemeral/home/dataset/'
 OUTPUT_DIR = '/data/ephemeral/home/output/mmdetection/'
 NUM_CLASSES = 10  # Number of classes in the dataset
+MODEL_NAME = 'faster_rcnn'
 
 def create_config() -> tuple[Config, str, str]:
     """MMDetection 설정 생성"""
+    classes = ("General trash", "Paper", "Paper pack", "Metal", "Glass", 
+           "Plastic", "Styrofoam", "Plastic bag", "Battery", "Clothing")
     try:
-        cfg = Config.fromfile('configs/faster_rcnn/faster-rcnn_r50_fpn_1x_coco.py')
+        # config file 들고오기
+        cfg = Config.fromfile(CONFIG_DIR)    
     except Exception as e:
         raise RuntimeError(f"설정 파일을 불러오는 데 실패했습니다: {str(e)}")
 
@@ -33,113 +41,66 @@ def create_config() -> tuple[Config, str, str]:
     experiment_dir = os.path.join(OUTPUT_DIR, f"{timestamp}_{random_code}")
     os.makedirs(experiment_dir, exist_ok=True)
 
-    # 데이터셋 초기화
-    train_dataset = CocoDetectionDataset(
-        data_path=DATA_DIR,
-        ann_file=os.path.join(DATA_DIR, 'train.json')
-    )
+    # dataset config 수정
+    cfg.data.train.classes = classes
+    cfg.data.train.img_prefix = DATA_DIR
+    cfg.data.train.ann_file = DATA_DIR + 'train2.json' # train json 정보
+    cfg.data.train.pipeline[2]['img_scale'] = (512,512) # Resize
 
-    val_dataset = CocoDetectionDataset(
-        data_path=DATA_DIR,
-        ann_file=os.path.join(DATA_DIR, 'val.json')
-    )
+    cfg.data.val.classes = classes
+    cfg.data.val.img_prefix = DATA_DIR
+    cfg.data.val.ann_file = DATA_DIR + 'val2.json' # val json 정보
+    cfg.data.val.pipeline[1]['img_scale'] = (512,512) # Resize
 
-    # 데이터로더 설정
-    def collate_fn(batch):
-        images = [item[0] for item in batch]
-        targets = [item[1] for item in batch]
-        img_ids = [item[2] for item in batch]
-        return images, targets, img_ids
+    # cfg.data.test.classes = classes
+    # cfg.data.test.img_prefix = DATA_DIR
+    # cfg.data.test.ann_file = DATA_DIR + 'test.json' # test json 정보
+    # cfg.data.test.pipeline[1]['img_scale'] = (512,512) # Resize
 
-    # 데이터셋 설정 적용
-    cfg.dataset_type = 'CocoDetectionDataset'
-    cfg.data_root = DATA_DIR
+    cfg.data.samples_per_gpu = 4
 
-    cfg.train_dataloader = dict(
-        batch_size=16,
-        num_workers=4,
-        persistent_workers=True,
-        sampler=dict(type='DefaultSampler', shuffle=True),
-        dataset=train_dataset,
-        collate_fn=collate_fn
-    )
+    cfg.seed = 42
+    cfg.gpu_ids = [0]
+    cfg.work_dir = experiment_dir
 
-    cfg.val_dataloader = dict(
-        batch_size=16,
-        num_workers=4,
-        persistent_workers=True,
-        drop_last=False,
-        sampler=dict(type='DefaultSampler', shuffle=False),
-        dataset=val_dataset,
-        collate_fn=collate_fn
-    )
-
-    cfg.test_dataloader = cfg.val_dataloader
-
-    # 검증 설정
-    cfg.val_evaluator = dict(
-        type='CocoMetric',
-        ann_file=os.path.join(DATA_DIR, 'val.json'),
-        metric='bbox',
-        format_only=False
-    )
-
-    cfg.test_evaluator = cfg.val_evaluator
-
-    # 모델 설정
     cfg.model.roi_head.bbox_head.num_classes = NUM_CLASSES
 
     # 학습 설정
-    cfg.train_cfg = dict(type='EpochBasedTrainLoop', max_epochs=12, val_interval=1)
-    cfg.val_cfg = dict(type='ValLoop')
-    cfg.test_cfg = dict(type='TestLoop')
-
+    cfg.runner.max_epochs = 1 # 1 only when smoke-test, otherwise 12 or bigger
     # 옵티마이저 설정
-    cfg.optim_wrapper = dict(
-        type='OptimWrapper',
-        optimizer=dict(type='SGD', lr=0.02, momentum=0.9, weight_decay=0.0001)
-    )
+    cfg.optimizer = dict(type='AdamW', lr=0.001, weight_decay=0.0001)
+    cfg.optimizer_config.grad_clip = dict(max_norm=35, norm_type=2)
+    cfg.checkpoint_config = dict(max_keep_ckpts=3, interval=1)
+    cfg.device = get_device()
 
-    # 체크포인트 설정
-    cfg.default_hooks = dict(
-        timer=dict(type='IterTimerHook'),
-        logger=dict(type='LoggerHook', interval=50),
-        param_scheduler=dict(type='ParamSchedulerHook'),
-        checkpoint=dict(
-            type='CheckpointHook',
-            interval=1,
-            max_keep_ckpts=3,
-            save_best='auto',
-            out_dir=experiment_dir
-        ),
-        sampler_seed=dict(type='DistSamplerSeedHook'),
-        visualization=dict(type='DetVisualizationHook')
-    )
+    cfg.log_config.hooks = [
+        dict(type='TextLoggerHook'),
+        dict(type='MMDetWandbHook',
+             init_kwargs={'project': MODEL_NAME, 'config': cfg._cfg_dict.to_dict()},
+             interval=1,
+             log_checkpoint=True,
+             log_checkpoint_metadata=True,
+             num_eval_images=50,
+             bbox_score_thr=0.05,
+             )
+    ]
 
-    return cfg, timestamp, random_code
-
-def setup_wandb(cfg: Config, timestamp: str, random_code: str) -> str:
-    """WandB 설정 및 초기화"""
-    cfg_dict = cfg.to_dict()
-    wandb.init(
-        project="Object Detection",
-        name=f"mmdet_{timestamp}_{random_code}",
-        config=cfg_dict
-    )
-    return wandb.run.id
+    return cfg
 
 def main():
     """메인 실행 함수"""
     # 설정 생성
-    cfg, timestamp, random_code = create_config()
+    cfg = create_config()
 
-    # WandB 설정
-    wandb_id = setup_wandb(cfg, timestamp, random_code)
-    print(f"Started training with WandB run ID: {wandb_id}")
+    # build_dataset
+    datasets = [build_dataset(cfg.data.train)]
 
-    # 학습 실행
-    runner = Runner.from_cfg(cfg)
-    runner.train()
+    # 모델 build 및 pretrained network 불러오기
+    model = build_detector(cfg.model)
+    model.init_weights()
+
+    # 모델 학습
+    train_detector(model, datasets[0], cfg, distributed=False, validate=True)
 
 if __name__ == "__main__":
     main()
