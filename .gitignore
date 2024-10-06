@@ -50,3 +50,4 @@ data/
 logs/
 z_mine/
 wandb/
+artifacts/
