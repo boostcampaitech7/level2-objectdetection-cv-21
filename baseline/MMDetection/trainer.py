@@ -15,6 +15,7 @@ except ImportError:
 
 def main():
     """메인 실행 함수"""
+    """메인 실행 함수"""
     # 설정 생성
     cfg = create_config('faster_rcnn')
 
@@ -30,3 +31,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
