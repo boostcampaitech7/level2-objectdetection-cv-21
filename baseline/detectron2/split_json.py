@@ -40,8 +40,18 @@ val_data = {
     'categories': data['categories']
 }
 
+# Remove existing files
+if os.path.exists(os.path.join(DATA_DIR, 'train2.json')):
+    os.remove(os.path.join(DATA_DIR, 'train2.json'))
+    print("Removed the existing train2 json")
+if os.path.exists(os.path.join(DATA_DIR, 'val2.json')):
+    os.remove(os.path.join(DATA_DIR, 'val2.json'))
+    print("Removed the existing val2 json")
+
 # Save the training and validation JSON objects to file
 with open(os.path.join(DATA_DIR, 'train2.json'), 'w') as f:
     json.dump(train_data, f)
+    print("Successfully created the train2.json!")
 with open(os.path.join(DATA_DIR, 'val2.json'), 'w') as f:
     json.dump(val_data, f)
+    print("Successfully created the val2.json!")
