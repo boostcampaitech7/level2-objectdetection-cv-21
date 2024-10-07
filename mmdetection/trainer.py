@@ -12,7 +12,7 @@ from mmdet.models import build_detector
 from mmdet.apis import train_detector
 from mmdet.utils import get_device
 
-def main(cfg):
+def main():
     """메인 실행 함수"""
     
     # 실험 이름 생성
