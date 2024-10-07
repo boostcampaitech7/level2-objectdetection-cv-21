@@ -8,7 +8,7 @@ from timm.scheduler import create_scheduler_v2
 from timm.scheduler.cosine_lr import CosineLRScheduler
 from torchmetrics.detection.mean_ap import MeanAveragePrecision
 
-from .model_factory import create_model
+from .model_factory import create_model, create_stable_diffusion_model
 from config import ModelConfig
 
 
@@ -27,7 +27,11 @@ class DetectionModule(pl.LightningModule):
         model_hparams = vars(config) if config else {}
         hparams = {**hparams, **model_hparams}
         self.save_hyperparameters(hparams)
+        # 객체 탐지 모델 생성 (Stable Diffusion으로 데이터 증강)
         self.model = create_model(**model_hparams)
+
+        # Stable Diffusion을 사용한 증강 모델도 추가적으로 생성
+        self.stable_diffusion = create_stable_diffusion_model(device="cuda", fp16=True, sd_version="1.5")
 
         self.map = MeanAveragePrecision(
             box_format="xyxy",
@@ -40,58 +44,57 @@ class DetectionModule(pl.LightningModule):
         #     prob=self.hparams.mixup_prob, switch_prob=self.hparams.mixup_switch_prob,
         #     label_smoothing=self.hparams.smoothing, num_classes=500)
 
-    def forward(self, prompts):
+    def forward(self, images, targets=None):
         """
-        Forward method for text-to-image generation using Stable Diffusion.
+        객체 탐지 모델의 forward 함수. 
         """
-        # Generate images from text prompts
-        images = self.model.prompt_to_img(prompts)
-        return images
+        if targets is not None:
+            return self.model(images, targets)
+        else:
+            return self.model(images)
 
     def training_step(self, train_batch, batch_idx):
         """
-        Training step for fine-tuning Stable Diffusion.
+        훈련 스텝 정의. Stable Diffusion으로 생성된 이미지 포함.
         """
-        prompts, target_images, _ = train_batch  # Assuming dataset returns (prompts, images, labels)
+        images, targets, _ = train_batch
         
-        # Get text embeddings
-        text_embeddings = self.model.get_text_embeds(prompts)
+        # 객체 탐지 모델 예측 및 손실 계산
+        outputs = self.forward(images, targets)
+        losses = sum(loss for loss in outputs.values())
         
-        # Perform training step (you can add noise, latent manipulation, etc.)
-        pred_rgb = target_images.to(self.device)
-        loss = self.model.train_step(text_embeddings, pred_rgb)
-        
-        self.log("train_loss", loss, sync_dist=True)
-        return {"loss": loss}
+        # 학습 손실 기록
+        self.log("train_loss", losses, sync_dist=True)
+        return {"loss": losses}
 
     def validation_step(self, val_batch, batch_idx):
         """
-        Validation step for fine-tuned Stable Diffusion.
+        검증 스텝 정의. mAP로 성능 평가.
         """
-        prompts, target_images, _ = val_batch
-        text_embeddings = self.model.get_text_embeds(prompts)
-        pred_rgb = target_images.to(self.device)
+        images, targets, _ = val_batch
+        
+        # 객체 탐지 모델 예측
+        outputs = self.forward(images, targets)
+        losses = sum(loss for loss in outputs.values())
+        
+        # mAP 업데이트
+        self.map.update(outputs, targets)
 
-        # Calculate validation loss
-        loss = self.model.train_step(text_embeddings, pred_rgb)
-        self.log("val_loss", loss, sync_dist=True)
+        # 검증 손실 기록
+        self.log("val_loss", losses, sync_dist=True)
+        return {"loss": losses}
 
-        # Optionally, update Mean Average Precision (MAP) for comparison
-        # Since diffusion-based models don’t natively support bounding boxes, you might need to adapt MAP for image comparison
-        self.map.update(pred_rgb, target_images)
-        return {"loss": loss}
-
-
-    def on_validation_epoch_end(self, val_step_outputs):
+    def on_validation_epoch_end(self, outputs):
         """
-        Called at the end of the validation epoch.
+        각 에폭이 끝날 때 mAP 계산.
         """
         map_value = self.map.compute()
         self.log("map50", map_value["map_50"].item(), sync_dist=True)
         self.map.reset()
+
     def configure_optimizers(self):
         """
-        Configure optimizer and learning rate scheduler for Stable Diffusion fine-tuning.
+        최적화 함수 정의 (AdamW + 스케줄러).
         """
         optimizer = torch.optim.AdamW(
             self.model.parameters(),
@@ -99,25 +102,16 @@ class DetectionModule(pl.LightningModule):
             weight_decay=self.hparams.weight_decay,
         )
 
-        # Use a cosine or step scheduler
-        lr_scheduler, _ = create_scheduler_v2(
-            optimizer,
-            sched=self.hparams.sched,
-            num_epochs=self.trainer.max_epochs,
-            warmup_epochs=self.hparams.warmup_epochs,
-            warmup_lr=self.hparams.warmup_lr,
+        # 스케줄러 설정
+        lr_scheduler = torch.optim.lr_scheduler.StepLR(
+            optimizer, step_size=8, gamma=0.1
         )
-        return [optimizer], [{"scheduler": lr_scheduler, "interval": "epoch"}]
+        return [optimizer], [lr_scheduler]
 
-    def lr_scheduler_step(self, lr_scheduler, metric):
+    def generate_synthetic_data(self, prompts, resolutions=[(512, 512)]):
         """
-        Update learning rate scheduler after each epoch.
+        Stable Diffusion을 사용해 데이터 증강.
         """
-        lr_scheduler.step(epoch=self.current_epoch)  # timm's scheduler needs the epoch value
-
-    def generate_images(self, prompts, resolutions=[(128, 128), (512, 512)]):
-        """
-        Use Stable Diffusion to generate synthetic data.
-        """
-        # Generate synthetic images with Stable Diffusion
-        self.model.generate_synthetic_data(prompts=prompts, resolutions=resolutions)
+        # Stable Diffusion을 사용해 이미지를 생성
+        synthetic_images = self.stable_diffusion.generate_synthetic_data(prompts=prompts, resolutions=resolutions)
+        return synthetic_images

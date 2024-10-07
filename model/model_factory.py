@@ -14,3 +14,11 @@ def create_model(model_name="ResNet18", **kwargs):
     # 모델 객체를 생성하여 반환한다.
     model = model_class(**kwargs)
     return model
+
+# New function to create Stable Diffusion model
+def create_stable_diffusion_model(device="cuda", fp16=False, sd_version='1.5'):
+    """
+    Creates a Stable Diffusion model for text-to-image generation.
+    """
+    from .stable_diffusion_model import StableDiffusion  # Import the new Stable Diffusion model
+    return StableDiffusion(device=device, fp16=fp16, sd_version=sd_version)

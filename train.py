@@ -7,6 +7,40 @@ from config.config_factory import get_config
 from engine.tuner import RayTuner
 from engine.test_runner import run_test
 from utils import EnsemblePredictor
+from model.lightning_module import DetectionModule  # DetectionModule 가져오기
+from torch.utils.data import DataLoader
+
+
+# 데이터 증강을 위한 함수 (Stable Diffusion 사용)
+def augment_data_with_stable_diffusion(config, train_loader):
+    """
+    Stable Diffusion을 사용해 클래스 불균형을 해결하기 위한 증강 데이터를 생성합니다.
+
+    Args:
+        config: 모델 및 실험 설정이 포함된 configuration 객체
+        train_loader: 원래의 train DataLoader
+
+    Returns:
+        augmented_loader: 증강된 데이터를 포함한 DataLoader
+    """
+    # DetectionModule을 초기화하여 Stable Diffusion 모델을 가져옵니다
+    model = DetectionModule(hparams={}, config=config)
+    
+    # 증강할 클래스별 프롬프트 정의 (예시)
+    prompts = [
+        "A plastic bottle in a recycling bin",
+        "A glass jar for recycling",
+        "A metal can in a recycling bin"
+    ]
+    
+    # Stable Diffusion을 사용하여 증강된 데이터 생성
+    print("Stable Diffusion을 사용하여 데이터 증강을 시작합니다...")
+    generated_data = model.generate_synthetic_data(prompts=prompts)
+
+    # 증강된 데이터를 기존 train_loader에 추가 (add_generated_data는 사용자 정의 함수로 구현해야 함)
+    train_loader.dataset.add_generated_data(generated_data)
+
+    return train_loader
 
 
 # 하이퍼파라미터 튜닝, 모델 학습 및 테스트를 수행하는 함수
@@ -52,6 +86,14 @@ def main(config):
             f"CUDA not available. This program requires a CUDA-enabled NVIDIA GPU."
         )
 
+    # 데이터 증강을 위한 데이터셋 로드 및 Stable Diffusion을 통한 증강 적용
+    print("데이터셋을 로드하고 증강을 시작합니다...")
+    train_dataset = CocoDetectionDataset(data_path=config.dataset.data_path, ann_file=config.dataset.ann_file)
+    train_loader = DataLoader(train_dataset, batch_size=config.training.batch_size, shuffle=True)
+
+    # Stable Diffusion을 통한 데이터 증강
+    augmented_loader = augment_data_with_stable_diffusion(config, train_loader)
+
     # checkpoint 경로가 없을 경우 최적의 모델을 학습 후 테스트를 수행합니다
     tune_train_and_test(config)
 
@@ -63,7 +105,7 @@ if __name__ == "__main__":
         description="Model training and hyperparameter tuning."
     )
     parser.add_argument("--model-name", type=str, help="Name of the model to use.")
-    parser.add_argument("--num-gpus", type=int, help="Name of the model to use.")
+    parser.add_argument("--num-gpus", type=int, help="Number of GPUs to use.")
     parser.add_argument(
         "--smoke-test",
         action="store_true",
