@@ -4,6 +4,7 @@ import numpy as np
 from torch.utils.data import Dataset
 from pycocotools.coco import COCO
 from PIL import Image
+from torchvision import transforms
 
 class CocoDetectionDataset(Dataset):
     """
@@ -12,7 +13,8 @@ class CocoDetectionDataset(Dataset):
     def __init__(self, data_path="./",
         ann_file="./",
         image_ids=None,
-        is_inference=False):
+        is_inference=False,
+        augment=False):
         """
         Args:
             data_path (str): Root directory of the dataset
@@ -25,6 +27,21 @@ class CocoDetectionDataset(Dataset):
         self.coco = COCO(ann_file) # Iniialize COCO api
         self.image_ids = image_ids if image_ids is not None else list(self.coco.imgs.keys())
         self.image_dir = 'train' if 'train.json' in ann_file else 'test'
+        self.augment = augment
+
+
+        # Define augmentations if specified
+        if self.augment:
+            self.transform = transforms.Compose([
+                transforms.RandomHorizontalFlip(),
+                transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.2),
+                transforms.RandomRotation(10),
+                transforms.ToTensor()
+            ])
+        else:
+            self.transform = transforms.Compose([
+                transforms.ToTensor()
+            ])
 
     def __len__(self):
         return len(self.image_ids)
