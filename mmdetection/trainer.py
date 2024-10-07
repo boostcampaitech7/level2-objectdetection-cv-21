@@ -20,7 +20,7 @@ def main():
     random_code = str(uuid.uuid4())[:5]
     
     # 설정 생성
-    cfg, model_name, output_dir = create_config('faster_rcnn')
+    cfg, model_name, output_dir = create_config('retinanet')
     experiment_dir = os.path.join(output_dir, f"{timestamp}_{random_code}")
     os.makedirs(experiment_dir, exist_ok=True)
     cfg.work_dir = experiment_dir
@@ -52,7 +52,7 @@ def main():
 if __name__ == "__main__":
     sweep_configuration = {
         "method": "bayes",
-        "metric": {"goal": "maximize", "name": "mAP50"},
+        "metric": {"goal": "maximize", "name": "val/bbox_mAP_50"},
         "parameters": {
             "lr": {"max": 0.003, "min": 0.0001},
             "weight_decay": {"max": 0.01, "min": 0.0001}
