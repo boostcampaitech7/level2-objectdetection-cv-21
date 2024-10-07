@@ -15,3 +15,7 @@
 6. 이틀에 1개씩 가설을 적극적으로 세우기
 7. 말이 아프면 그 즉시 지적하기
 8. 그날 각 GPU 서버 사용자는 사다리타기로 뽑음.
+9. Issue와 PR을 만들 때, 수정된 [label](https://github.com/boostcampaitech7/level2-objectdetection-cv-21/labels?sort=name-asc) 이용하기
+    + Gitmoji+Name : Issue의 목적에 따라서 구분된 label (ex. 🐞: Bug)
+    + Issue의 중요도에 따라서 `Priority : High-Medium-Low`로 구분함.
+    + `🙋‍♂️ Hypothesis` : 가설 설정 및 검증을 위한 label, "이왕이면 모든 업무를 github 내에서 진행하는 것이 좋지 않을까?" 생각해서 추가
