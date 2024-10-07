@@ -5,10 +5,6 @@ from torch.utils.data import Dataset
 from pycocotools.coco import COCO
 from PIL import Image
 
-# Customize your path
-# DATA_PATH = "../data.tar.gz/dataset/train"
-# ANN_PATH = "../data.tar.gz/dataset/train.json"
-
 class CocoDetectionDataset(Dataset):
     """
     Dataset class for loading COCO format object detection datasets
@@ -85,4 +81,3 @@ class CocoDetectionDataset(Dataset):
             return image
 
         return image, target, img_id
-    
