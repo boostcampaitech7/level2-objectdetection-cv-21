@@ -45,7 +45,6 @@ class BaseConfig:
         cfg.runner.max_epochs = 1 # 1 only when smoke-test, otherwise 12 or bigger
         
         # 옵티마이저 설정
-        cfg.optimizer = dict(type='AdamW', lr=wandb.config.lr, weight_decay=wandb.config.weight_decay)
         cfg.optimizer_config.grad_clip = dict(max_norm=35, norm_type=2)
         cfg.checkpoint_config = dict(max_keep_ckpts=1, interval=1)
         cfg.device = get_device()
@@ -54,7 +53,7 @@ class BaseConfig:
         cfg.log_config.hooks = [
             dict(type='TextLoggerHook'),
             dict(
-                type='MMDetWandbHook',
+                type='NoInitWandbLoggerHook',
                 interval=1,
                 log_checkpoint=True,
                 log_checkpoint_metadata=True,
