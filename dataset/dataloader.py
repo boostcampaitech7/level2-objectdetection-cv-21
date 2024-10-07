@@ -42,13 +42,15 @@ def get_dataloaders(config):
     train_dataset = CocoDetectionDataset(
         data_path=config.dataset.data_path,
         ann_file=ann_file,
-        image_ids=train_ids
+        image_ids=train_ids,
+        augment=True
     )
 
     val_dataset = CocoDetectionDataset(
         data_path=config.dataset.data_path,
         ann_file=ann_file,
-        image_ids=val_ids
+        image_ids=val_ids,
+        augment=False
     )
 
     # Create data loaders

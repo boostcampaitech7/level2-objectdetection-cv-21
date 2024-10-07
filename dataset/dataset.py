@@ -4,6 +4,10 @@ import numpy as np
 from torch.utils.data import Dataset
 from pycocotools.coco import COCO
 from PIL import Image
+from torchvision import transforms
+from transformers import ViTImageProcessor
+from torchvision.transforms import (CenterCrop, Compose, Normalize, RandomHorizontalFlip, 
+                                    RandomResizedCrop, Resize, ToTensor)
 
 class CocoDetectionDataset(Dataset):
     """
@@ -12,7 +16,8 @@ class CocoDetectionDataset(Dataset):
     def __init__(self, data_path="./",
         ann_file="./",
         image_ids=None,
-        is_inference=False):
+        is_inference=False,
+        augment=False):
         """
         Args:
             data_path (str): Root directory of the dataset
@@ -25,6 +30,31 @@ class CocoDetectionDataset(Dataset):
         self.coco = COCO(ann_file) # Iniialize COCO api
         self.image_ids = image_ids if image_ids is not None else list(self.coco.imgs.keys())
         self.image_dir = 'train' if 'train.json' in ann_file else 'test'
+        self.augment = augment
+
+        # Load ViTImageProcessor for normalization
+        processor = ViTImageProcessor.from_pretrained("google/vit-base-patch16-224-in21k")
+        image_mean = processor.image_mean
+        image_std = processor.image_std
+        size = processor.size["height"]
+
+        # Define augmentations for training
+        if self.augment:
+            self.transform = Compose([
+                RandomResizedCrop(size),  # Resize and crop the image
+                RandomHorizontalFlip(),   # Randomly flip the image
+                transforms.GaussianBlur(kernel_size=5),  # Add Gaussian blur
+                ToTensor(),
+                Normalize(mean=image_mean, std=image_std)  # Normalize using ViT's mean and std
+            ])
+        else:
+            # Use validation/test transformations (without augmentation)
+            self.transform = Compose([
+                Resize(size),
+                CenterCrop(size),
+                ToTensor(),
+                Normalize(mean=image_mean, std=image_std)  # Normalize for validation/test
+            ])
 
     def __len__(self):
         return len(self.image_ids)
