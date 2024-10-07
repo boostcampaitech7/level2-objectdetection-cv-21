@@ -40,84 +40,58 @@ class DetectionModule(pl.LightningModule):
         #     prob=self.hparams.mixup_prob, switch_prob=self.hparams.mixup_switch_prob,
         #     label_smoothing=self.hparams.smoothing, num_classes=500)
 
-    def forward(self, x, y=None):
-        if y is not None:
-            return self.model(x, y)
-        else:
-            return self.model(x)
+    def forward(self, prompts):
+        """
+        Forward method for text-to-image generation using Stable Diffusion.
+        """
+        # Generate images from text prompts
+        images = self.model.prompt_to_img(prompts)
+        return images
 
     def training_step(self, train_batch, batch_idx):
         """
-        모델의 훈련 스텝 정의.
-
-        Args:
-            train_batch (tuple): 입력, 출력 텐서 배치.
-            batch_idx (int): 배치 인덱스.
-
-        Returns:
-            dict: 손실값을 포함하는 딕셔너리.
+        Training step for fine-tuning Stable Diffusion.
         """
-        x, y, _ = train_batch
-        output = self.forward(x, y)
-        losses = sum(loss for loss in output.values()) # Faster RCNN처럼 다중 loss인 경우
-
-        self.log("train_loss", losses, sync_dist=True)
-        return {"loss": losses}
+        prompts, target_images, _ = train_batch  # Assuming dataset returns (prompts, images, labels)
+        
+        # Get text embeddings
+        text_embeddings = self.model.get_text_embeds(prompts)
+        
+        # Perform training step (you can add noise, latent manipulation, etc.)
+        pred_rgb = target_images.to(self.device)
+        loss = self.model.train_step(text_embeddings, pred_rgb)
+        
+        self.log("train_loss", loss, sync_dist=True)
+        return {"loss": loss}
 
     def validation_step(self, val_batch, batch_idx):
         """
-        모델의 검증 스텝 정의.
-
-        Args:
-            val_batch (tuple): 입력, 출력 텐서 배치.
-            batch_idx (int): 배치 인덱스.
-
-        Returns:
-            None
+        Validation step for fine-tuned Stable Diffusion.
         """
-        images, targets, _ = val_batch
-        images = list(image.float() for image in images)
-        targets = [{k: v for k, v in t.items()} for t in targets]
-        output = self.forward(images, targets)
-        losses = sum(loss for loss in output.values()) # Faster RCNN처럼 다중 loss인 경우
-        self.log("val_loss", losses, sync_dist=True)
-        self.map.update(output, targets)
-        return {"loss": losses}
-    
+        prompts, target_images, _ = val_batch
+        text_embeddings = self.model.get_text_embeds(prompts)
+        pred_rgb = target_images.to(self.device)
+
+        # Calculate validation loss
+        loss = self.model.train_step(text_embeddings, pred_rgb)
+        self.log("val_loss", loss, sync_dist=True)
+
+        # Optionally, update Mean Average Precision (MAP) for comparison
+        # Since diffusion-based models don’t natively support bounding boxes, you might need to adapt MAP for image comparison
+        self.map.update(pred_rgb, target_images)
+        return {"loss": loss}
+
+
     def on_validation_epoch_end(self, val_step_outputs):
+        """
+        Called at the end of the validation epoch.
+        """
         map_value = self.map.compute()
         self.log("map50", map_value["map_50"].item(), sync_dist=True)
         self.map.reset()
-
-    def test_step(self, test_batch, batch_idx):
-        """
-        모델의 예측 스텝 정의.
-
-        Args:
-            test_batch (tuple): 입력 텐서 배치.
-            batch_idx (int): 배치 인덱스.
-
-        Returns:
-            list: 예측된 클래스 인덱스 목록.
-        """
-        outputs = []
-        output = self.forward(test_batch)
-        for out in output:
-            outputs.append(
-                {
-                    'boxes': out['boxes'].tolist(), 
-                    'scores': out['scores'].tolist(), 
-                    'labels': out['labels'].tolist()
-                    }
-                )
-        return outputs
-
     def configure_optimizers(self):
         """
-        모델의 최적화 함수 정의.
-
-        Returns:
-            torch.optim.Adam: 모델의 Adam 최적화 함수.
+        Configure optimizer and learning rate scheduler for Stable Diffusion fine-tuning.
         """
         optimizer = torch.optim.AdamW(
             self.model.parameters(),
@@ -125,22 +99,25 @@ class DetectionModule(pl.LightningModule):
             weight_decay=self.hparams.weight_decay,
         )
 
-        # if self.hparams.sched=='cosine':
-        #     lr_scheduler = CosineLRScheduler(optimizer, t_initial=20, warmup_t=5, warmup_lr_init=1e-6)
-        # elif self.hparams.sched=='step':
-        #     lr_scheduler = torch.optim.lr_scheduler.StepLR(
-        #         optimizer, step_size=self.trainer.estimated_stepping_batches * 2, gamma=0.1
-        #     )
-        
-
+        # Use a cosine or step scheduler
         lr_scheduler, _ = create_scheduler_v2(
             optimizer,
             sched=self.hparams.sched,
             num_epochs=self.trainer.max_epochs,
             warmup_epochs=self.hparams.warmup_epochs,
             warmup_lr=self.hparams.warmup_lr,
-            )
+        )
         return [optimizer], [{"scheduler": lr_scheduler, "interval": "epoch"}]
 
     def lr_scheduler_step(self, lr_scheduler, metric):
-        lr_scheduler.step(epoch=self.current_epoch)  # timm's scheduler need the epoch value
+        """
+        Update learning rate scheduler after each epoch.
+        """
+        lr_scheduler.step(epoch=self.current_epoch)  # timm's scheduler needs the epoch value
+
+    def generate_images(self, prompts, resolutions=[(128, 128), (512, 512)]):
+        """
+        Use Stable Diffusion to generate synthetic data.
+        """
+        # Generate synthetic images with Stable Diffusion
+        self.model.generate_synthetic_data(prompts=prompts, resolutions=resolutions)
