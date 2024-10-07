@@ -21,7 +21,7 @@ class retinanet_config(BaseConfig):
             raise RuntimeError(f"설정 파일을 불러오는 데 실패했습니다: {str(e)}")
 
     def build_config(self):
-        self.cfg = self.setup_config(self.cfg, self.model_name)
+        self.cfg = self.setup_config(self.cfg)
         # dataset config 수정
         self.cfg.data.train.classes = self.classes
         self.cfg.data.train.dataset.classes = self.classes
