@@ -1,7 +1,7 @@
 # retinanet_config.py
 import os
 
-from base_config import BaseConfig
+from .base_config import BaseConfig
 from mmcv import Config
 from mmdet.datasets import build_dataset
 from mmdet.models import build_detector
@@ -24,7 +24,8 @@ class retinanet_config(BaseConfig):
         self.cfg = self.setup_config(self.cfg, self.model_name)
         # dataset config 수정
         self.cfg.data.train.classes = self.classes
-        self.cfg.data.train.img_prefix = self.data_dir
+        self.cfg.data.train.dataset.classes = self.classes
+        self.cfg.data.train.dataset.img_prefix = self.data_dir
         self.cfg.data.train.dataset.ann_file = self.data_dir + 'train2.json' # train json 정보
         self.cfg.data.train.dataset.pipeline[2]['img_scale'] = (512,512) # Resize
         
@@ -42,6 +43,9 @@ class retinanet_config(BaseConfig):
 
 
         self.cfg.model.bbox_head.num_classes = self.num_classes
+        del self.cfg.model.pretrained
+        self.cfg.model.backbone.init_cfg.checkpoint = 'open-mmlab://resnext101_64x4d'
+        
         # 학습 설정
         self.cfg.runner.max_epochs = 1 # 1 only when smoke-test, otherwise 12 or bigger
         
