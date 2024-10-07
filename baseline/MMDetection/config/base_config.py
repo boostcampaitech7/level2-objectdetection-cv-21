@@ -3,6 +3,8 @@ import os
 import datetime
 import uuid
 
+import wandb
+
 from mmdet.utils import get_device
 
 class BaseConfig:
@@ -14,7 +16,7 @@ class BaseConfig:
         self.output_dir = '/data/ephemeral/home/output/mmdetection/'
         self.num_classes = 10
 
-    def setup_config(self, cfg, model_name):
+    def setup_config(self, cfg):
         '''
         아래 내용 중 주석 부분과 변경이 필요한 내용을 build_config에
         복사해서 쓰시되, 
@@ -37,21 +39,13 @@ class BaseConfig:
         cfg.seed = 42
         cfg.gpu_ids = [0]
 
-
-        # 실험 이름 생성
-        timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        random_code = str(uuid.uuid4())[:5]
-        experiment_dir = os.path.join(self.output_dir, f"{timestamp}_{random_code}")
-        os.makedirs(experiment_dir, exist_ok=True)
-        cfg.work_dir = experiment_dir
-
         # self.cfg.model.roi_head.bbox_head.num_classes = self.num_classes
         
         # 학습 설정
         cfg.runner.max_epochs = 1 # 1 only when smoke-test, otherwise 12 or bigger
         
         # 옵티마이저 설정
-        cfg.optimizer = dict(type='AdamW', lr=0.001, weight_decay=0.0001)
+        cfg.optimizer = dict(type='AdamW', lr=wandb.config.lr, weight_decay=wandb.config.weight_decay)
         cfg.optimizer_config.grad_clip = dict(max_norm=35, norm_type=2)
         cfg.checkpoint_config = dict(max_keep_ckpts=1, interval=1)
         cfg.device = get_device()
@@ -61,7 +55,6 @@ class BaseConfig:
             dict(type='TextLoggerHook'),
             dict(
                 type='MMDetWandbHook',
-                init_kwargs={'project': "Object Detection", 'name':f'{model_name}_{random_code}','config': cfg._cfg_dict.to_dict()},
                 interval=1,
                 log_checkpoint=True,
                 log_checkpoint_metadata=True,
