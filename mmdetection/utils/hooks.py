@@ -1,7 +1,7 @@
 import warnings
 from typing import Dict, Optional
 
-from mmcv.runner.hooks import Hooks
+from mmcv.runner.hooks import HOOKS
 from mmcv.runner.hooks.logger.wandb import WandbLoggerHook
 
 @HOOKS.register_module()
