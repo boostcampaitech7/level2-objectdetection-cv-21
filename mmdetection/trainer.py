@@ -17,7 +17,7 @@ def main():
     """메인 실행 함수"""
     """메인 실행 함수"""
     # 설정 생성
-    cfg = create_config('faster_rcnn')
+    cfg = create_config('retinanet')
 
     # build_dataset
     datasets = [build_dataset(cfg.data.train)]
