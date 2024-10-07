@@ -12,8 +12,6 @@ from mmdet.models import build_detector
 from mmdet.apis import train_detector
 from mmdet.utils import get_device
 
-from utils import NoInitWandbLoggerHook
-
 def main():
     """메인 실행 함수"""
     
@@ -69,4 +67,4 @@ if __name__ == "__main__":
 
     sweep_id = wandb.sweep(sweep=sweep_configuration, project='Test Run')
 
-    wandb.agent(sweep_id, function=main, count=5)
+    wandb.agent(sweep_id, function=main, count=1)

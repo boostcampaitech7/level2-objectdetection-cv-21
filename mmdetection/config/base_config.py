@@ -53,7 +53,7 @@ class BaseConfig:
         cfg.log_config.hooks = [
             dict(type='TextLoggerHook'),
             dict(
-                type='NoInitWandbLoggerHook',
+                type='MMDetWandbHook',
                 interval=1,
                 log_checkpoint=True,
                 log_checkpoint_metadata=True,
