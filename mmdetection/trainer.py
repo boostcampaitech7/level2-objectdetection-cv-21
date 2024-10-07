@@ -27,6 +27,7 @@ def main():
 
     wandb.init(
         project="Object Detection", 
+        dir=experiment_dir,
         name=f'{model_name}_{random_code}',
         config=cfg._cfg_dict.to_dict()
         )
