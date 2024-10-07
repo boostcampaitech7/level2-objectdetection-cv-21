@@ -1,5 +1,5 @@
 import warnings
-from typing import Dict, Optional
+from typing import Dict, Optional, Union
 
 from mmcv.runner.hooks import HOOKS
 from mmcv.runner.hooks.logger.wandb import WandbLoggerHook
@@ -13,8 +13,11 @@ class NoInitWandbLoggerHook(WandbLoggerHook):
                  reset_flag: bool = False,
                  commit: bool = True,
                  by_epoch: bool = True,
-                 with_step=False, log_artifact=False, out_suffix=None):
-        super().__init__(init_kwargs=init_kwargs, interval=interval, ignore_last=ignore_last, reset_flag=reset_flag, commit=commit, by_epoch=by_epoch, with_step=with_step, log_artifact=log_artifact, out_suffix=out_suffix)
+                 with_step: bool = True,
+                 log_artifact: bool = True,
+                 out_suffix: Union[str, tuple] = ('.log.json', '.log', '.py'),
+                 define_metric_cfg: Optional[Dict] = None):
+        super().__init__(init_kwargs=init_kwargs, interval=interval, ignore_last=ignore_last, reset_flag=reset_flag, commit=commit, by_epoch=by_epoch, with_step=with_step, log_artifact=log_artifact, out_suffix=out_suffix, define_metric_cfg=define_metric_cfg)
 
     def before_run(self, runner) -> None:
         super(WandbLoggerHook, self).before_run(runner)
