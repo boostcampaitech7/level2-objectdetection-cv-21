@@ -12,7 +12,7 @@ from mmdet.models import build_detector
 from mmdet.apis import train_detector
 from mmdet.utils import get_device
 
-# from utils import NoInitWandbLoggerHook
+from utils import NoInitWandbLoggerHook
 
 def main():
     """메인 실행 함수"""
