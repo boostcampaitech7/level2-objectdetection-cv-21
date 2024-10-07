@@ -43,6 +43,9 @@ class retinanet_config(BaseConfig):
 
 
         self.cfg.model.bbox_head.num_classes = self.num_classes
+        del self.cfg.model.pretrained
+        self.cfg.model.backbone.init_cfg.checkpoint = 'open-mmlab://resnext101_64x4d'
+        
         # 학습 설정
         self.cfg.runner.max_epochs = 1 # 1 only when smoke-test, otherwise 12 or bigger
         
