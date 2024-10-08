@@ -53,7 +53,7 @@ if __name__ == "__main__":
         "method": "bayes",
         "metric": {"goal": "maximize", "name": "val/bbox_mAP_50"},
         "parameters": {
-            "lr": {"max": 0.003, "min": 0.0001, "distribution": "log_uniform"},
+            "lr": {"max": 0.003, "min": 0.0001, "distribution": "log_uniform_values"},
             "weight_decay": {"max": 0.01, "min": 0.0001}
         },
         "early_terminate":{
