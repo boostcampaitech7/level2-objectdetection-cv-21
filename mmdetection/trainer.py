@@ -27,7 +27,6 @@ def main():
 
     wandb.init(
         project="Object Detection", 
-        dir=experiment_dir,
         name=f'{model_name}_{random_code}',
         config=cfg._cfg_dict.to_dict()
         )
@@ -54,7 +53,7 @@ if __name__ == "__main__":
         "method": "bayes",
         "metric": {"goal": "maximize", "name": "val/bbox_mAP_50"},
         "parameters": {
-            "lr": {"max": 0.003, "min": 0.0001},
+            "lr": {"max": 0.003, "min": 0.0001, "distribution": "log_uniform"},
             "weight_decay": {"max": 0.01, "min": 0.0001}
         },
         "early_terminate":{
@@ -65,6 +64,6 @@ if __name__ == "__main__":
         }
     }
 
-    sweep_id = wandb.sweep(sweep=sweep_configuration, project='Test Run')
+    sweep_id = wandb.sweep(sweep=sweep_configuration, project='Object Detection')
 
-    wandb.agent(sweep_id, function=main, count=2)
+    wandb.agent(sweep_id, function=main, count=5)

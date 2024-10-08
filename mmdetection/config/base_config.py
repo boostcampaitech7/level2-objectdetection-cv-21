@@ -46,7 +46,7 @@ class BaseConfig:
         
         # 옵티마이저 설정
         cfg.optimizer_config.grad_clip = dict(max_norm=35, norm_type=2)
-        cfg.checkpoint_config = dict(max_keep_ckpts=1, interval=1)
+        cfg.checkpoint_config = dict(max_keep_ckpts=1, interval=10)
         cfg.device = get_device()
 
         # Wandb 설정
@@ -54,10 +54,10 @@ class BaseConfig:
             dict(type='TextLoggerHook'),
             dict(
                 type='MMDetWandbHook',
-                interval=1,
+                interval=5,
                 log_checkpoint=True,
                 log_checkpoint_metadata=True,
-                num_eval_images=10,
+                num_eval_images=4,
                 bbox_score_thr=0.05,
                 )
             ]

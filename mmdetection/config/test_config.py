@@ -43,6 +43,6 @@ class test_config(BaseConfig):
         self.cfg.model.roi_head.bbox_head.num_classes = 10
         
         # 학습 설정
-        self.cfg.runner.max_epochs = 1 # 1 only when smoke-test, otherwise 12 or bigger
+        self.cfg.runner.max_epochs = 50 # 1 only when smoke-test, otherwise 12 or bigger
         
         return self.cfg
