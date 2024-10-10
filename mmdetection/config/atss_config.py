@@ -17,30 +17,30 @@ class atss_config(BaseConfig):
 
     def build_config(self):
         self.cfg = self.setup_config(self.cfg)
-        # dataset config 수정
+
+        # 데이터셋 클래스 및 경로 설정
         self.cfg.data.train.classes = self.classes
         self.cfg.data.train.img_prefix = self.data_dir
-        self.cfg.data.train.ann_file = self.data_dir + 'train2.json' # train json 정보
-        self.cfg.data.train.pipeline[2]['img_scale'] = (512,512) # Resize
-        
-        
+        self.cfg.data.train.ann_file = os.path.join(self.data_dir, 'train2.json')  # train json 정보
+        self.cfg.data.train.pipeline[2]['img_scale'] = (512, 512)  # 이미지 크기 조정
+
         self.cfg.data.val.classes = self.classes
         self.cfg.data.val.img_prefix = self.data_dir
-        self.cfg.data.val.ann_file = self.data_dir + 'val2.json' # val json 정보
-        self.cfg.data.val.pipeline[1]['img_scale'] = (512,512) # Resize
+        self.cfg.data.val.ann_file = os.path.join(self.data_dir, 'val2.json')  # val json 정보
+        self.cfg.data.val.pipeline[1]['img_scale'] = (512, 512)  # 이미지 크기 조정
 
         self.cfg.data.test.classes = self.classes
         self.cfg.data.test.img_prefix = self.data_dir
-        self.cfg.data.test.ann_file = self.data_dir + 'test.json' # test json 정보
-        self.cfg.data.test.pipeline[1]['img_scale'] = (512,512) # Resize
+        self.cfg.data.test.ann_file = os.path.join(self.data_dir, 'test.json')  # test json 정보
+        self.cfg.data.test.pipeline[1]['img_scale'] = (512, 512)  # 이미지 크기 조정
 
-        # print(self.cfg.data)
-        # exit()
-
+        # 데이터 로드 및 배치 크기 설정
         self.cfg.data.samples_per_gpu = 16
-        for bbox_head in self.cfg.model.roi_head.bbox_head:
-            bbox_head['num_classes'] = self.num_classes
+
+        # ATSS는 roi_head를 사용하지 않음 -> bbox_head만 설정
+        self.cfg.model.bbox_head.num_classes = self.num_classes
+
         # 학습 설정
-        self.cfg.runner.max_epochs = 30 # 1 only when smoke-test, otherwise 12 or bigger
-        
+        self.cfg.runner.max_epochs = 30  # 30 epochs로 설정, 필요시 변경 가능
+
         return self.cfg

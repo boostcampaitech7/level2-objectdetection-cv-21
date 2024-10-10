@@ -20,7 +20,7 @@ def main():
     random_code = str(uuid.uuid4())[:5]
     
     # 설정 생성
-    cfg, model_name, output_dir = create_config('cascade_rcnn')
+    cfg, model_name, output_dir = create_config('atss')
     experiment_dir = os.path.join(output_dir, f"{timestamp}_{random_code}")
     os.makedirs(experiment_dir, exist_ok=True)
     cfg.work_dir = experiment_dir
@@ -34,7 +34,7 @@ def main():
     
     # Wandb에 의한 옵티마이저 하이퍼파라미터 조정
     cfg.optimizer = dict(
-        type='AdamW', 
+        type='SGD', 
         lr=wandb.config.lr, 
         weight_decay=wandb.config.weight_decay
         )
@@ -65,6 +65,6 @@ if __name__ == "__main__":
         }
     }
 
-    sweep_id = wandb.sweep(sweep=sweep_configuration, project='Cascade R-CNN_X-101-64x4d-FPN')
+    sweep_id = wandb.sweep(sweep=sweep_configuration, project='ATSS')
 
     wandb.agent(sweep_id, function=main, count=2)
