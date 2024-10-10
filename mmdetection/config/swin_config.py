@@ -8,7 +8,7 @@ from mmcv import Config
 class swin_config(BaseConfig):
     def __init__(self):
         super().__init__()
-        self.config_dir = '/data/ephemeral/home/mmdetection/configs/swin/mask-rcnn_swin-s-p4-w7_fpn_amp-ms-crop-3x_coco.py'
+        self.config_dir = '/data/ephemeral/home/mmdetection/configs/swin/mask_rcnn_swin-s-p4-w7_fpn_fp16_ms-crop-3x_coco.py'
         self.model_name = os.path.basename(self.config_dir).split('.')[0]
         try:
             self.cfg = Config.fromfile(self.config_dir)
@@ -19,10 +19,8 @@ class swin_config(BaseConfig):
         self.cfg = self.setup_config(self.cfg)
         # dataset config 수정
         self.cfg.data.train.classes = self.classes
-        self.cfg.data.train.dataset.classes = self.classes
-        self.cfg.data.train.dataset.img_prefix = self.data_dir
-        self.cfg.data.train.dataset.ann_file = self.data_dir + 'train2.json' # train json 정보
-        self.cfg.data.train.dataset.pipeline[2]['img_scale'] = (512,512) # Resize
+        self.cfg.data.train.img_prefix = self.data_dir
+        self.cfg.data.train.ann_file = self.data_dir + 'train2.json' # train json 정보
         
         
         self.cfg.data.val.classes = self.classes
@@ -38,9 +36,10 @@ class swin_config(BaseConfig):
         # print(self.cfg.data)
         # exit()
 
-        self.cfg.data.samples_per_gpu = 16
-        for bbox_head in self.cfg.model.roi_head.bbox_head:
-            bbox_head['num_classes'] = self.num_classes
+        self.cfg.data.samples_per_gpu = 8
+        
+        self.cfg.model.roi_head.bbox_head['num_classes'] = self.num_classes
+        self.cfg.model.roi_head.mask_head['num_classes'] = self.num_classes
             
         # 학습 설정
         self.cfg.runner.max_epochs = 30 # 1 only when smoke-test, otherwise 12 or bigger

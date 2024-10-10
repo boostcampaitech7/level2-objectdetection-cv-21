@@ -47,7 +47,7 @@ def main():
     model.init_weights()
 
     # 모델 학습
-    train_detector(model, datasets[0], cfg, distributed=False, validate=True)
+    train_detector(model, datasets[0], cfg, distributed=False, validate=True, meta=dict())
 
 if __name__ == "__main__":
     sweep_configuration = {
@@ -65,6 +65,6 @@ if __name__ == "__main__":
         }
     }
 
-    sweep_id = wandb.sweep(sweep=sweep_configuration, project='swin-s-p4-w7_fpn_amp-ms-crop-3x')
+    sweep_id = wandb.sweep(sweep=sweep_configuration, project='Object Detection')
 
     wandb.agent(sweep_id, function=main, count=2)
