@@ -34,7 +34,7 @@ def main():
     
     # Wandb에 의한 옵티마이저 하이퍼파라미터 조정
     cfg.optimizer = dict(
-        type='AdamW', 
+        type='SGD', 
         lr=wandb.config.lr, 
         weight_decay=wandb.config.weight_decay
         )
