@@ -20,7 +20,7 @@ def main():
     random_code = str(uuid.uuid4())[:5]
     
     # 설정 생성
-    cfg, model_name, output_dir = create_config('test')
+    cfg, model_name, output_dir = create_config('swin')
     experiment_dir = os.path.join(output_dir, f"{timestamp}_{random_code}")
     os.makedirs(experiment_dir, exist_ok=True)
     cfg.work_dir = experiment_dir
@@ -65,6 +65,6 @@ if __name__ == "__main__":
         }
     }
 
-    sweep_id = wandb.sweep(sweep=sweep_configuration, project='Test Run')
+    sweep_id = wandb.sweep(sweep=sweep_configuration, project='swin-s-p4-w7_fpn_amp-ms-crop-3x')
 
     wandb.agent(sweep_id, function=main, count=2)
