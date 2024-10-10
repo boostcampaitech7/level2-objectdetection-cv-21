@@ -36,6 +36,7 @@ def main():
     cfg.optimizer = dict(
         type='SGD', 
         lr=wandb.config.lr, 
+        momentum=0.9,
         weight_decay=wandb.config.weight_decay
         )
 
