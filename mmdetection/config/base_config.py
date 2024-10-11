@@ -46,7 +46,7 @@ class BaseConfig:
         
         # 옵티마이저 설정
         cfg.optimizer_config.grad_clip = dict(max_norm=35, norm_type=2)
-        cfg.checkpoint_config = dict(max_keep_ckpts=1, interval=1)
+        cfg.checkpoint_config = dict(max_keep_ckpts=1, interval=10)
         cfg.device = get_device()
 
         # Wandb 설정
