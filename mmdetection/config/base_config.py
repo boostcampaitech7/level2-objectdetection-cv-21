@@ -46,7 +46,7 @@ class BaseConfig:
         
         # 옵티마이저 설정
         cfg.optimizer_config.grad_clip = dict(max_norm=35, norm_type=2)
-        cfg.checkpoint_config = dict(max_keep_ckpts=1, interval=10)
+        cfg.checkpoint_config = None
         cfg.device = get_device()
 
         # Wandb 설정
@@ -54,12 +54,17 @@ class BaseConfig:
             dict(type='TextLoggerHook'),
             dict(
                 type='MMDetWandbHook',
-                interval=1,
+                interval=10,
                 log_checkpoint=True,
                 log_checkpoint_metadata=True,
                 num_eval_images=10,
                 bbox_score_thr=0.05,
                 )
             ]
+        # Custom Hook 설정 - CheckpointHook에 'bbox_mAP_50' 기준으로 best 모델 저장
+        cfg.custom_hooks = [
+            dict(type='CheckpointHook', interval=10, max_keep_ckpts=1, save_best='bbox_mAP_50', save_last=True)
+        ]
         
+        # print(cfg)
         return cfg
