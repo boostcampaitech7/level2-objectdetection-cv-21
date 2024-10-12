@@ -47,7 +47,7 @@ def inference(cfg, epoch):
     for i, out in enumerate(output):
         prediction_string = ''
         image_info = coco.loadImgs(coco.getImgIds(imgIds=i))[0]
-        image_id = image_info['id']  # 파일 이름 대신 image_id 사용
+        image_id = image_info['id']  # 숫자로 된 image_id를 가져옵니다.
         for j, class_output in enumerate(out):
             for bbox in class_output:
                 score = bbox[4]
