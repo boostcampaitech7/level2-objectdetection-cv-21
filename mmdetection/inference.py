@@ -64,9 +64,9 @@ def inference(cfg, epoch):
     submission.to_csv(os.path.join(cfg.work_dir, f'submission_{epoch}.csv'), index=False)
     print(f'Submission file saved at {os.path.join(cfg.work_dir, f"submission_{epoch}.csv")}')
 
-def main():
+def main(): #/data/ephemeral/home/mmdetection/configs/atss/atss_r50_fpn_1x_coco.py
     parser = argparse.ArgumentParser(description='PyTorch Object Detection Inference')
-    parser.add_argument('--config', type=str, default='./configs/faster_rcnn/faster_rcnn_r50_fpn_1x_coco.py', help='config file')
+    parser.add_argument('--config', type=str, default='/data/ephemeral/home/mmdetection/configs/atss/atss_r50_fpn_1x_coco.py', help='config file')
     parser.add_argument('--epoch', type=str, default='latest', help='epoch number')
     args = parser.parse_args()
 
