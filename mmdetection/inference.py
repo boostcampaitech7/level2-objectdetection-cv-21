@@ -47,14 +47,16 @@ def inference(cfg, epoch):
     for i, out in enumerate(output):
         prediction_string = ''
         image_info = coco.loadImgs(coco.getImgIds(imgIds=i))[0]
+        image_id = image_info['id']  # 파일 이름 대신 image_id 사용
         for j, class_output in enumerate(out):
             for bbox in class_output:
                 score = bbox[4]
                 xmin, ymin, xmax, ymax = bbox[0], bbox[1], bbox[2], bbox[3]
                 prediction_string += f'{j} {score} {xmin} {ymin} {xmax} {ymax} '
-        
+    
         prediction_strings.append(prediction_string.strip())
-        file_names.append(image_info['file_name'])
+        file_names.append(image_id)  # image_id를 저장
+
 
     # 결과를 CSV 파일로 저장
     submission = pd.DataFrame({
