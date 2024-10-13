@@ -20,7 +20,8 @@ def main():
     random_code = str(uuid.uuid4())[:5]
     
     # 설정 생성
-    cfg, model_name, output_dir = create_config('atss')
+    cfg, model_name, output_dir = create_config('swin')
+
     experiment_dir = os.path.join(output_dir, f"{timestamp}_{random_code}")
     os.makedirs(experiment_dir, exist_ok=True)
     cfg.work_dir = experiment_dir
@@ -48,7 +49,7 @@ def main():
     model.init_weights()
 
     # 모델 학습
-    train_detector(model, datasets[0], cfg, distributed=False, validate=True)
+    train_detector(model, datasets[0], cfg, distributed=False, validate=True, meta=dict())
 
 if __name__ == "__main__":
     sweep_configuration = {
@@ -66,6 +67,8 @@ if __name__ == "__main__":
         }
     }
 
-    sweep_id = wandb.sweep(sweep=sweep_configuration, project='ATSS')
+
+    sweep_id = wandb.sweep(sweep=sweep_configuration, project='Object Detection')
+
 
     wandb.agent(sweep_id, function=main, count=2)
