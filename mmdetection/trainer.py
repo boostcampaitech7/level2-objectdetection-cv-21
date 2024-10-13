@@ -12,6 +12,8 @@ from mmdet.models import build_detector
 from mmdet.apis import train_detector
 from mmdet.utils import get_device
 
+from utils import CustomCheckpointHook
+
 def main():
     """메인 실행 함수"""
     
@@ -25,7 +27,7 @@ def main():
     os.makedirs(experiment_dir, exist_ok=True)
     cfg.work_dir = experiment_dir
 
-    wandb.init(
+    run = wandb.init(
         project="Object Detection", 
         dir=experiment_dir,
         name=f'{model_name}_{random_code}',
@@ -49,6 +51,11 @@ def main():
 
     # 모델 학습
     train_detector(model, datasets[0], cfg, distributed=False, validate=True)
+    # artifact = wandb.Artifact(name=f"artifact_{random_code}", type="model")
+    # artifact.add_file(local_path='./', name=f"models/{model_name}_{random_code}_best")
+    # run.log_artifact(artifact)
+    # artifact.save()
+
 
 if __name__ == "__main__":
     sweep_configuration = {
@@ -68,4 +75,4 @@ if __name__ == "__main__":
 
     sweep_id = wandb.sweep(sweep=sweep_configuration, project='test')
 
-    wandb.agent(sweep_id, function=main, count=2)
+    wandb.agent(sweep_id, function=main, count=1)
