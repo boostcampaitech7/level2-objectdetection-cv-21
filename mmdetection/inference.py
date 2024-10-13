@@ -49,6 +49,7 @@ def inference(cfg, epoch, model_config):
     img_ids = coco.getImgIds()
 
     class_num = 10
+    '''
     for i, out in enumerate(output):
         prediction_string = ''
         image_info = coco.loadImgs(coco.getImgIds(imgIds=i))[0]
@@ -59,8 +60,21 @@ def inference(cfg, epoch, model_config):
         
         prediction_strings.append(prediction_string)
         file_names.append(image_info['file_name'])
-    
-    os.makedirs('../level2-objectdetection-cv-21/mmdetection/output')
+    '''
+    for i, out in enumerate(output):
+        prediction_string = ''
+        image_info = coco.loadImgs(coco.getImgIds(imgIds=i))[0]
+        image_id = image_info['id']  # 파일 이름 대신 image_id 사용
+        for j, class_output in enumerate(out):
+            for bbox in class_output:
+                score = bbox[4]
+                xmin, ymin, xmax, ymax = bbox[0], bbox[1], bbox[2], bbox[3]
+                prediction_string += f'{j} {score} {xmin} {ymin} {xmax} {ymax} '
+        
+        prediction_strings.append(prediction_string.strip())
+        file_names.append(image_id)  # image_id를 저장
+        
+    os.makedirs('../level2-objectdetection-cv-21/mmdetection/output', exist_ok=True)
     save_dir = '/data/ephemeral/home/sungjoo/level2-objectdetection-cv-21/mmdetection/output'
 
     submission = pd.DataFrame()
