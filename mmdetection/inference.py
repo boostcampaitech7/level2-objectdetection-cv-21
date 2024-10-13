@@ -1,38 +1,43 @@
 import mmcv
 from mmcv import Config
+import datetime
+import uuid
 from mmdet.datasets import (build_dataloader, build_dataset,
                             replace_ImageToTensor)
 from mmdet.models import build_detector
 from mmdet.apis import single_gpu_test
 from mmcv.runner import load_checkpoint
+from config import create_config
 import os
+import wandb
 from mmcv.parallel import MMDataParallel
 import pandas as pd
 from pandas import DataFrame
 from pycocotools.coco import COCO
 import numpy as np
 import argparse
+import shutil
+wandb.login()
 
-classes = ("General trash", "Paper", "Paper pack", "Metal", "Glass", 
-           "Plastic", "Styrofoam", "Plastic bag", "Battery", "Clothing")
 
-def inference(cfg, epoch):
+def inference(cfg, epoch, model_config):
     # build dataset & dataloader
     dataset = build_dataset(cfg.data.test)
     data_loader = build_dataloader(
         dataset,
         samples_per_gpu=1,
-        workers_per_gpu=cfg.data.workers_per_gpu,
+        workers_per_gpu=8,
         dist=False,
         shuffle=False)
 
     # checkpoint path
+    print(cfg.work_dir)
     checkpoint_path = os.path.join(cfg.work_dir, f'{epoch}.pth')
 
-    model = build_detector(cfg.model, test_cfg=cfg.get('test_cfg')) # build detector
+    model = build_detector(cfg.model, test_cfg=cfg.get(f'{model_config}_cfg')) # build detector
     checkpoint = load_checkpoint(model, checkpoint_path, map_location='cpu') # ckpt load
 
-    model.CLASSES = dataset.CLASSES
+    model.CLASSES = cfg.data.test.classes
     model = MMDataParallel(model.cuda(), device_ids=[0])
 
     output = single_gpu_test(model, data_loader, show_score_thr=0.05) # output 계산
@@ -54,37 +59,44 @@ def inference(cfg, epoch):
         
         prediction_strings.append(prediction_string)
         file_names.append(image_info['file_name'])
+    
+    os.makedirs('../level2-objectdetection-cv-21/mmdetection/output')
+    save_dir = '/data/ephemeral/home/sungjoo/level2-objectdetection-cv-21/mmdetection/output'
 
     submission = pd.DataFrame()
     submission['PredictionString'] = prediction_strings
     submission['image_id'] = file_names
-    submission.to_csv(os.path.join(cfg.work_dir, f'submission_{epoch}.csv'), index=None)
+    submission.to_csv(os.path.join(save_dir, f'submission_{epoch}.csv'), index=None)
+
+    # checkpoint 삭제
+    shutil.rmtree(cfg.work_dir)
 
 def main():
     parser = argparse.ArgumentParser(description='PyTorch Object Detection Inference')
-    parser.add_argument('--config', type=str, default='./configs/faster_rcnn/faster_rcnn_r50_fpn_1x_coco.py', help='config file')
+    parser.add_argument('--model_config', type=str, default='test', help='config name without _config')
+    parser.add_argument('--wandb_config', type=str, default=None, help='config file')
     parser.add_argument('--epoch', type=str, default='latest', help='epoch number')
     args = parser.parse_args()
 
-    cfg = Config.fromfile(args.config)
-
-    root='../../dataset/'
-    cfg.data.test.classes = classes
-    cfg.data.test.img_prefix = root
-    cfg.data.test.ann_file = root + 'test.json'
-    cfg.data.test.pipeline[1]['img_scale'] = (512,512) # Resize
+    cfg, model_name, output_dir = create_config(args.model_config)
     cfg.data.test.test_mode = True
+    cfg.model.train_cfg = None
 
     cfg.seed=2021
     cfg.gpu_ids = [1]
-    cfg.work_dir = './work_dirs/faster_rcnn_r50_fpn_1x_trash'
-
-    cfg.model.roi_head.bbox_head.num_classes = 10
+    # cfg.work_dir = './work_dirs/faster_rcnn_r50_fpn_1x_trash'
 
     cfg.optimizer_config.grad_clip = dict(max_norm=35, norm_type=2)
-    cfg.model.train_cfg = None
 
-    inference(cfg, args.epoch)
+    # loading wandb
+    run = wandb.init()
+    artifact = run.use_artifact(args.wandb_config, type='model')
+    artifact_dir = artifact.download(path_prefix=f'{args.epoch}.pth')
+    cfg.work_dir = artifact_dir
+
+    inference(cfg, args.epoch, args.model_config)
 
 if __name__ == "__main__":
     main()
+
+import wandb
