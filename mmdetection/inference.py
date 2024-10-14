@@ -62,7 +62,7 @@ def inference(cfg, epoch, model_config):
         file_names.append(image_info['file_name'])
         
     os.makedirs('../level2-objectdetection-cv-21/mmdetection/output', exist_ok=True)
-    save_dir = '/data/ephemeral/home/sungjoo/level2-objectdetection-cv-21/mmdetection/output'
+    save_dir = '/data/ephemeral/home/suhyun/level2-objectdetection-cv-21/mmdetection/output'
 
     submission = pd.DataFrame()
     submission['PredictionString'] = prediction_strings
