@@ -11,8 +11,8 @@ from mmdet.datasets import (build_dataloader, build_dataset,
 
 
 class test_config(BaseConfig):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, max_epochs=25):
+        super().__init__(max_epochs=max_epochs) # BaseConfig로 에폭 넘김
         self.config_dir = '/data/ephemeral/home/mmdetection/configs/faster_rcnn/faster_rcnn_r50_fpn_1x_coco.py'
         self.model_name = os.path.basename(self.config_dir).split('.')[0]
         try:
@@ -41,8 +41,5 @@ class test_config(BaseConfig):
         self.cfg.data.test.pipeline[1]['img_scale'] = (512,512) # Resize
 
         self.cfg.model.roi_head.bbox_head.num_classes = 10
-        
-        # 학습 설정
-        self.cfg.runner.max_epochs = 1 # 1 only when smoke-test, otherwise 12 or bigger
         
         return self.cfg
