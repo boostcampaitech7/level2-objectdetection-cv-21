@@ -35,10 +35,10 @@ class test_config(BaseConfig):
         
         self.cfg.data.samples_per_gpu = 16
                 
-        # cfg.data.test.classes = classes
-        # cfg.data.test.img_prefix = DATA_DIR
-        # cfg.data.test.ann_file = DATA_DIR + 'test.json' # test json 정보
-        # cfg.data.test.pipeline[1]['img_scale'] = (512,512) # Resize
+        self.cfg.data.test.classes = self.classes
+        self.cfg.data.test.img_prefix = self.data_dir
+        self.cfg.data.test.ann_file = self.data_dir + 'test.json' # test json 정보
+        self.cfg.data.test.pipeline[1]['img_scale'] = (512,512) # Resize
 
         self.cfg.model.roi_head.bbox_head.num_classes = 10
         
