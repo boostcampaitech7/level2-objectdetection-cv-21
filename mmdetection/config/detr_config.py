@@ -5,10 +5,10 @@ from mmcv import Config
 
 
 class detr_config(BaseConfig):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, max_epochs=25):
+        super().__init__(max_epochs=max_epochs)
         # Cascade RCNN config 파일 경로 설정
-        self.config_dir = '/data/ephemeral/home/mmdetection/configs/detr/detr_r50_8xb2-150e_coco.py'
+        self.config_dir = '/data/ephemeral/home/mmdetection/configs/detr/detr_r50_8x2_150e_coco.py'
         self.model_name = os.path.basename(self.config_dir).split('.')[0]
         try:
             # Config 파일 불러오기
@@ -58,15 +58,12 @@ class detr_config(BaseConfig):
             dict(type='LoadAnnotations', with_bbox=True),
             dict(type='Resize', img_scale=(512, 512), keep_ratio=True),
             dict(type='RandomFlip', flip_ratio=0.5),
-            dict(type='RandomRotate', prob=0.5, degree=10),  # 회전 추가
-            dict(type='ColorJitter', brightness=0.2, contrast=0.2, saturation=0.2),  # 색상 변형 추가
+            # dict(type='RandomRotate', prob=0.5, degree=10),  # 회전 추가
+            # dict(type='ColorJitter', brightness=0.2, contrast=0.2, saturation=0.2),  # 색상 변형 추가
             dict(type='Normalize', mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True),
             dict(type='Pad', size_divisor=32),
             dict(type='DefaultFormatBundle'),
             dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels'])
         ]
-
-        # 학습 설정
-        self.cfg.runner.max_epochs = 20  # smoke-test 시 1, 실험 시 더 큰 값으로 설정
         
         return self.cfg
