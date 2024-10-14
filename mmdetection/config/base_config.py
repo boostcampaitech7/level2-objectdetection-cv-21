@@ -8,13 +8,14 @@ import wandb
 from mmdet.utils import get_device
 
 class BaseConfig:
-    def __init__(self):
+    def __init__(self, max_epochs=25):
         self.cfg = None
         self.classes = ("General trash", "Paper", "Paper pack", "Metal", "Glass", 
            "Plastic", "Styrofoam", "Plastic bag", "Battery", "Clothing")
         self.data_dir = '/data/ephemeral/home/dataset/'
         self.output_dir = '/data/ephemeral/home/output/mmdetection/'
         self.num_classes = 10
+        self.max_epochs = max_epochs
 
     def setup_config(self, cfg):
         '''
@@ -42,11 +43,11 @@ class BaseConfig:
         # self.cfg.model.roi_head.bbox_head.num_classes = self.num_classes
         
         # 학습 설정
-        cfg.runner.max_epochs = 1 # 1 only when smoke-test, otherwise 12 or bigger
+        cfg.runner.max_epochs = self.max_epochs # 1 only when smoke-test, otherwise 12 or bigger
         
         # 옵티마이저 설정
         cfg.optimizer_config.grad_clip = dict(max_norm=35, norm_type=2)
-        cfg.checkpoint_config = dict(max_keep_ckpts=1, interval=10)
+        cfg.checkpoint_config = dict(max_keep_ckpts=1, interval=self.max_epochs)        # interval epoch으로 설정
         cfg.device = get_device()
 
         # Wandb 설정
@@ -54,7 +55,7 @@ class BaseConfig:
             dict(type='TextLoggerHook'),
             dict(
                 type='MMDetWandbHook',
-                interval=1,
+                interval=self.max_epochs,           # interval epoch으로 설정
                 log_checkpoint=True,
                 log_checkpoint_metadata=True,
                 num_eval_images=10,
