@@ -55,7 +55,7 @@ class BaseConfig:
             dict(type='TextLoggerHook'),
             dict(
                 type='MMDetWandbHook',
-                interval=self.max_epochs,           # interval epoch으로 설정
+                interval=5,           # interval epoch으로 설정
                 log_checkpoint=True,
                 log_checkpoint_metadata=True,
                 num_eval_images=10,
