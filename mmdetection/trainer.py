@@ -20,8 +20,8 @@ def main():
     random_code = str(uuid.uuid4())[:5]
     
     # 설정 생성
-    max_epochs = 3     # 에폭 설정
-    cfg, model_name, output_dir = create_config('test', max_epochs=max_epochs)  # 모델 Config에 epoch 넘김
+    max_epochs = 30     # 에폭 설정
+    cfg, model_name, output_dir = create_config('faster_rcnn', max_epochs=max_epochs)  # 모델 Config에 epoch 넘김
 
     experiment_dir = os.path.join(output_dir, f"{timestamp}_{random_code}")
     os.makedirs(experiment_dir, exist_ok=True)
@@ -36,9 +36,8 @@ def main():
     
     # Wandb에 의한 옵티마이저 하이퍼파라미터 조정
     cfg.optimizer = dict(
-        type='SGD', 
-        lr=wandb.config.lr, 
-        momentum=0.9,
+        type='AdamW', 
+        lr=wandb.config.lr,
         weight_decay=wandb.config.weight_decay
         )
 
@@ -72,4 +71,4 @@ if __name__ == "__main__":
     sweep_id = wandb.sweep(sweep=sweep_configuration, project='Object Detection')
 
 
-    wandb.agent(sweep_id, function=main, count=2)
+    wandb.agent(sweep_id, function=main, count=10)
