@@ -1,6 +1,6 @@
 # 학습, 검증 데이터 경로
-train: datasets/train
-val: datasets/val
+train: /data/ephemeral/home/dataset/train/
+val: /data/ephemeral/home/dataset/test/
 
 # 클래스 수
 nc: 10  # 10개의 클래스
