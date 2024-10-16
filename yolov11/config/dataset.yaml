@@ -1,0 +1,9 @@
+train: ../dataset/train/  # 학습 이미지 경로
+val: ../dataset/test/    # 검증 이미지 경로
+test: ../dataset/test/   # (선택 사항) 테스트 이미지 경로
+
+# 클래스 수
+nc: 10  # 클래스의 수 (여러 클래스가 있는 경우)
+
+# 클래스 이름
+names: ['general_trash','paper','paper_pack','metal','glass','plastic','styrofoam','plastic_bag','battery','clothing']  # 클래스 이름 추가
