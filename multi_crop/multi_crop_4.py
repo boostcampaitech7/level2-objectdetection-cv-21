@@ -47,6 +47,7 @@ with open(annotation_path, 'r') as file:
 new_images = []
 new_annotations = []
 new_img_id = max([img['id'] for img in data['images']]) + 1
+new_annotation_id = max([ann['id'] for ann in data['annotations']]) + 1
 
 # Load images
 coco = COCO(annotation_path)
@@ -97,6 +98,11 @@ for idx in os.listdir(os.path.join(dataDir,'train')):
                 "id": new_img_id
             }
             new_images.append(new_img)
+
+            for ann in updated_anns:
+                ann['id'] = new_annotation_id  # 고유한 annotation ID 할당
+                new_annotation_id += 1  # 다음 annotation을 위한 ID 증가
+
             new_annotations.extend(updated_anns)
             # bbox가 있는 경우만 subimg 저장 
             subimg.save(os.path.join(subimgs_path, subimg_filename))
