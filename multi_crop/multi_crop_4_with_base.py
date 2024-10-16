@@ -6,14 +6,11 @@ from PIL import Image
 import json
 from datetime import datetime
 
-os.makedirs("/data/ephemeral/home/dataset/subimages", exist_ok=True)
-os.makedirs("/data/ephemeral/home/dataset/subimages/train", exist_ok=True)
-
 # Dataset path
 dataDir = '/data/ephemeral/home/dataset'
 annotation_path = '/data/ephemeral/home/dataset/train.json'
-subimgs_path = '/data/ephemeral/home/dataset/subimages'
-updated_annotation_path = '/data/ephemeral/home/dataset/subimages/train_multi_crop_4images.json'
+subimgs_path = '/data/ephemeral/home/dataset/'
+updated_annotation_path = '/data/ephemeral/home/dataset/train_multi_crop_4images_with_base.json'
 
 def update_annotations_for_subimage(annotations, subimg_info, img_id):
     updated_annotations = []
@@ -106,10 +103,6 @@ for idx in os.listdir(os.path.join(dataDir,'train')):
 # 추가는 train.json 파일로 해야함
 with open(annotation_path, 'r') as file:
     original_data = json.load(file)
-
-# 기존의 images와 annotations 데이터를 비움
-original_data['images'] = []
-original_data['annotations'] = []
 
 original_data['images'].extend(new_images)
 original_data['annotations'].extend(new_annotations)
