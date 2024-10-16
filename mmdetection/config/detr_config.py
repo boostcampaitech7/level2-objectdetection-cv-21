@@ -9,6 +9,7 @@ class detr_config(BaseConfig):
         # DETR config 파일 경로 설정
         self.config_dir = '/data/ephemeral/home/mmdetection/configs/detr/detr_r50_8x2_150e_coco.py'
         self.model_name = os.path.basename(self.config_dir).split('.')[0]
+        self.img_scale = (512, 512)
         try:
             # Config 파일 불러오기
             self.cfg = Config.fromfile(self.config_dir)
@@ -16,55 +17,43 @@ class detr_config(BaseConfig):
             raise RuntimeError(f"설정 파일을 불러오는 데 실패했습니다: {str(e)}")
 
     def build_config(self):
+        # 클래스 수 설정
+        self.num_classes = len(self.classes)  # self.classes의 길이로 설정
+        self.cfg.model.bbox_head.num_classes = self.num_classes
+
         # 기본 설정을 구성하는 함수 호출
         self.cfg = self.setup_config(self.cfg)
 
-        # dataset config 수정
-        self.cfg.data.train.classes = self.classes
-        self.cfg.data.train.img_prefix = self.data_dir
-        self.cfg.data.train.ann_file = self.data_dir + 'train2.json'  # train json 정보
-        # 파이프라인 수정 (img_scale 인자는 Resize에서만 사용)
-        self.cfg.data.train.pipeline = [
-            dict(type='LoadImageFromFile'),
-            dict(type='LoadAnnotations', with_bbox=True),
-            dict(type='RandomFlip', flip_ratio=0.5),  # img_scale 인자 제거
+        train_pipeline = [
+            dict(type='Mosaic', img_scale=self.img_scale),
             dict(
-                type='AutoAugment',
-                policies=[[
-                    dict(
-                        type='Resize',
-                        img_scale=[(480, 1333), (512, 1333), (544, 1333), (576, 1333),
-                                   (608, 1333), (640, 1333), (672, 1333), (704, 1333),
-                                   (736, 1333), (768, 1333), (800, 1333)],
-                        multiscale_mode='value',
-                        keep_ratio=True)
-                ],
-                          [
-                              dict(
-                                  type='Resize',
-                                  img_scale=[(400, 1333), (500, 1333), (600, 1333)],
-                                  multiscale_mode='value',
-                                  keep_ratio=True),
-                              dict(
-                                  type='RandomCrop',
-                                  crop_type='absolute_range',
-                                  crop_size=(384, 600),
-                                  allow_negative_crop=True),
-                              dict(
-                                  type='Resize',
-                                  img_scale=[(480, 1333), (512, 1333), (544, 1333),
-                                             (576, 1333), (608, 1333), (640, 1333),
-                                             (672, 1333), (704, 1333), (736, 1333),
-                                             (768, 1333), (800, 1333)],
-                                  multiscale_mode='value',
-                                  override=True,
-                                  keep_ratio=True)
-                          ]]),
-            dict(type='Normalize', mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True),
-            dict(type='Pad', size_divisor=1),
+                type='RandomAffine',
+                scaling_ratio_range=(0.1, 2),
+                border=(-self.img_scale[0] // 2, -self.img_scale[1] // 2)
+            ),
+            dict(type='RandomFlip', flip_ratio=0.5),
+            dict(type='Normalize', **self.cfg.img_norm_cfg),
+            dict(type='Pad', size_divisor=32),
             dict(type='DefaultFormatBundle'),
             dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels'])
         ]
+
+        # train 데이터셋 설정
+        self.cfg.data.train = dict(
+            type='MultiImageMixDataset',
+            dataset=dict(
+                type='CocoDataset',
+                ann_file=self.data_dir + 'train2.json',
+                img_prefix=self.data_dir,
+                classes=self.classes,  # 클래스 설정 추가
+                pipeline=[
+                    dict(type='LoadImageFromFile'),
+                    dict(type='LoadAnnotations', with_bbox=True)
+                ],
+                filter_empty_gt=False,
+            ),
+            pipeline=train_pipeline
+        )
 
         self.cfg.data.val.classes = self.classes
         self.cfg.data.val.img_prefix = self.data_dir
@@ -77,8 +66,5 @@ class detr_config(BaseConfig):
         self.cfg.data.test.pipeline[1]['img_scale'] = (512, 512)  # Resize
 
         self.cfg.data.samples_per_gpu = 16  # Batch size
-
-        # bbox_head 설정 수정 (DETR 모델은 roi_head 대신 bbox_head만 사용)
-        self.cfg.model.bbox_head.num_classes = self.num_classes
         
         return self.cfg

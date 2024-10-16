@@ -20,7 +20,7 @@ def main():
     random_code = str(uuid.uuid4())[:5]
     
     # 설정 생성
-    max_epochs = 25     # 에폭 설정
+    max_epochs = 10     # 에폭 설정
     cfg, model_name, output_dir = create_config('detr', max_epochs=max_epochs)  # 모델 Config에 epoch 넘김
 
     experiment_dir = os.path.join(output_dir, f"{timestamp}_{random_code}")
