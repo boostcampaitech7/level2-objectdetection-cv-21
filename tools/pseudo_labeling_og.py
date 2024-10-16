@@ -8,11 +8,6 @@ from tqdm import tqdm
 from .misc import AverageMeter, accuracy # Average, Accuracy 계산 함수
 from .utils import enable_dropout
 
-''' [Key point]
-(1) pseudo_labeling은 모델 학습을 통해 생성된 BBox에서, argmax(가장 높게 예측된 확률)을 true_class로 예측함
-(2) If not argmax() : False 취급 -> BBox 제거
-(3) 따라서 argmax 값들만 True BBox로 판단하고, 이를 통해서 평가함.
-'''
 def pseudo_labeling(args, data_loader, model, itr):
 ''' [Arugment]
 - batch_time : 1 batch 실행 시간 측정
