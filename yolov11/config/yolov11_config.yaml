@@ -1,0 +1,19 @@
+# 학습, 검증 데이터 경로
+train: datasets/train
+val: datasets/val
+
+# 클래스 수
+nc: 10  # 10개의 클래스
+
+# 클래스 이름
+names:
+  - general_trash
+  - paper
+  - paper_pack
+  - metal
+  - glass
+  - plastic
+  - styrofoam
+  - plastic_bag
+  - battery
+  - clothing

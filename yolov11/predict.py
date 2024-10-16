@@ -1,41 +1,30 @@
-# Ultralytics YOLO 🚀, AGPL-3.0 license
+import argparse
+import cv2
+from ultralytics import YOLO
 
-from ultralytics.engine.predictor import BasePredictor
-from ultralytics.engine.results import Results
-from ultralytics.utils import ops
+def parse_opt():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--weights', type=str, default='models/yolo11x.pt', help='모델 가중치 파일 경로')
+    parser.add_argument('--img-path', type=str, required=True, help='입력 이미지 파일 경로')
+    parser.add_argument('--output-path', type=str, default='output.jpg', help='결과 이미지 저장 경로')
+    parser.add_argument('--conf-thres', type=float, default=0.5, help='탐지 신뢰도 임계값')
+    opt = parser.parse_args()
+    return opt
 
+def predict(opt):
+    # YOLO 모델 불러오기
+    model = YOLO(opt.weights)
 
-class DetectionPredictor(BasePredictor):
-    """
-    A class extending the BasePredictor class for prediction based on a detection model.
+    # 이미지 불러오기
+    img = cv2.imread(opt.img_path)
 
-    Example:
-        ```python
-        from ultralytics.utils import ASSETS
-        from ultralytics.models.yolo.detect import DetectionPredictor
+    # 예측 수행
+    results = model(img, conf=opt.conf_thres)
 
-        args = dict(model="yolo11n.pt", source=ASSETS)
-        predictor = DetectionPredictor(overrides=args)
-        predictor.predict_cli()
-        ```
-    """
+    # 탐지 결과 이미지 저장
+    results.save(opt.output_path)
+    print(f"결과가 {opt.output_path}에 저장되었습니다.")
 
-    def postprocess(self, preds, img, orig_imgs):
-        """Post-processes predictions and returns a list of Results objects."""
-        preds = ops.non_max_suppression(
-            preds,
-            self.args.conf,
-            self.args.iou,
-            agnostic=self.args.agnostic_nms,
-            max_det=self.args.max_det,
-            classes=self.args.classes,
-        )
-
-        if not isinstance(orig_imgs, list):  # input images are a torch.Tensor, not a list
-            orig_imgs = ops.convert_torch2numpy_batch(orig_imgs)
-
-        results = []
-        for pred, orig_img, img_path in zip(preds, orig_imgs, self.batch[0]):
-            pred[:, :4] = ops.scale_boxes(img.shape[2:], pred[:, :4], orig_img.shape)
-            results.append(Results(orig_img, path=img_path, names=self.model.names, boxes=pred))
-        return results
+if __name__ == "__main__":
+    opt = parse_opt()
+    predict(opt)
