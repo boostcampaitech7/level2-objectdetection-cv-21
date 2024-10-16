@@ -1,5 +1,5 @@
 #!/bin/bash
-
+#
 # Install with pip
 pip install ftfy==6.1.1 regex tqdm==4.65.0 pycocotools==2.0.6 scipy==1.10.1 opencv-python numpy==1.23.1
 pip install git+https://github.com/FANGAreNotGnu/CLIP.git

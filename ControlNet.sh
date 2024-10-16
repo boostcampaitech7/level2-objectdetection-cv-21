@@ -1,5 +1,5 @@
 #!/bin/bash
-
+#
 # Install pip packages
 pip install gradio==3.16.2
 pip install albumentations==1.3.0
