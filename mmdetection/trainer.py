@@ -20,8 +20,8 @@ def main():
     random_code = str(uuid.uuid4())[:5]
     
     # 설정 생성
-    max_epochs = 30     # 에폭 설정
-    cfg, model_name, output_dir = create_config('faster_rcnn', max_epochs=max_epochs)  # 모델 Config에 epoch 넘김
+    max_epochs = 10     # 에폭 설정
+    cfg, model_name, output_dir = create_config('detr', max_epochs=max_epochs)  # 모델 Config에 epoch 넘김
 
     experiment_dir = os.path.join(output_dir, f"{timestamp}_{random_code}")
     os.makedirs(experiment_dir, exist_ok=True)
@@ -56,8 +56,8 @@ if __name__ == "__main__":
         "method": "bayes",
         "metric": {"goal": "maximize", "name": "val/bbox_mAP_50"},
         "parameters": {
-            "lr": {"max": 0.003, "min": 0.0001},
-            "weight_decay": {"max": 0.01, "min": 0.0001}
+            "lr": {"max": 0.0003, "min": 0.00001},
+            "weight_decay": {"max": 0.001, "min": 0.0001}
         },
         "early_terminate":{
             "type": "hyperband",
