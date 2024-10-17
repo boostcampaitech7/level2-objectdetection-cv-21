@@ -1,100 +1,44 @@
-import os
-import argparse
-import datetime
-import uuid
-from typing import Tuple
-import mmcv
-from mmcv import Config
-from mmcv.runner import load_checkpoint
-from mmcv.parallel import MMDataParallel
-import pandas as pd
-from pandas import DataFrame
-from pycocotools.coco import COCO
-import numpy as np
-import shutil
-import wandb
-from mmdet.datasets import (build_dataloader, build_dataset,
-                            replace_ImageToTensor)
-from mmdet.models import build_detector
-from mmdet.apis import single_gpu_test
-from config import create_config
+import re
+import csv
 
+def convert_string_to_lists(input_string):
+    # 정규표현식을 사용하여 대괄호 안의 숫자들을 추출
+    pattern = r'\[(.*?)\]'
+    matches = re.findall(pattern, input_string)
 
-def inference(cfg, epoch_number: int, model_config: str) -> None:
-    """Run inference on a given model and configuration."""
-    # Build dataset and dataloader
-    dataset = build_dataset(cfg.data.test)
-    data_loader = build_dataloader(
-        dataset,
-        samples_per_gpu=1,
-        workers_per_gpu=8,
-        dist=False,
-        shuffle=False)
+    # 추출된 문자열을 리스트로 변환
+    result = []
+    for match in matches:
+        # 쉼표로 구분된 숫자들을 실수로 변환
+        numbers = [float(num.strip()) for num in match.split(',')]
+        result.append(numbers)
 
-    # Load checkpoint
-    checkpoint_path = os.path.join(cfg.work_dir, f'epoch_{epoch_number}.pth')
-    model = build_detector(cfg.model, test_cfg=cfg.get(f'{model_config}_cfg'))
-    checkpoint = load_checkpoint(model, checkpoint_path, map_location='cpu')
+    return result
 
-    # Update model classes and parallelize
-    model.CLASSES = cfg.data.test.classes
-    model = MMDataParallel(model.cuda(), device_ids=[0])
+def process_csv_file(input_file_path):
+    try:
+        with open(input_file_path, 'r') as file:
+            csv_reader = csv.reader(file)
 
-    # Run single GPU test
-    output = single_gpu_test(model, data_loader, show_score_thr=0.05)
+            # 각 줄을 처리
+            for row in csv_reader:
+                if len(row) >= 2:  # 최소한 2개의 열이 있는지 확인
+                    input_string = row[0]  # 첫 번째 열의 문자열
+                    filename = row[1]      # 두 번째 열의 파일명
 
-    # Post-processing for submission format
-    pred_strings = []
-    file_names = []
-    coco = COCO(cfg.data.test.ann_file)
-    img_ids = coco.getImgIds()
-    class_num = 10
+                    # 문자열 변환 수행
+                    result_lists = convert_string_to_lists(input_string)
 
-    for i, out in enumerate(output):
-        pred_string = []
-        image_info = coco.loadImgs(coco.getImgIds(imgIds=i))[0]
-        for j in range(class_num):
-            for o in out[j]:
-                pred_string.append([j, o[4], o[0], o[1], o[2], o[3]])
+                    # 결과 출력
+                    print(f"\nProcessing {filename}:")
+                    for sublist in result_lists:
+                        print(sublist)
 
-        pred_strings.append(pred_string)
-        file_names.append(image_info['file_name'])
+    except FileNotFoundError:
+        print(f"Error: The file {input_file_path} was not found.")
+    except Exception as e:
+        print(f"An error occurred: {str(e)}")
 
-    # Create submission directory and save results
-    save_dir = '../level2-objectdetection-cv-21/mmdetection/output'
-    os.makedirs(save_dir, exist_ok=True)
-    submission = pd.DataFrame()
-    submission['PredictionString'] = pred_strings
-    submission['image_id'] = file_names
-    submission.to_csv(os.path.join(save_dir, f'submission_{model_config}_epoch_{epoch_number}.csv'), index=None)
-
-    # Remove checkpoint directory
-    shutil.rmtree(cfg.work_dir)
-
-
-def main() -> None:
-    """Parse arguments and run inference."""
-    parser = argparse.ArgumentParser(description='PyTorch Object Detection Inference')
-    parser.add_argument('--model_config', type=str, default='test', help='config name without _config')
-    parser.add_argument('--wandb_path', type=str, default=None, help='config file')
-    parser.add_argument('--epoch_number', type=int, default=None, help='epoch number')
-    args = parser.parse_args()
-
-    cfg, model_name, output_dir = create_config(args.model_config)
-    cfg.data.test.test_mode = True
-    cfg.model.train_cfg = None
-    cfg.seed = 2021
-    cfg.gpu_ids = [1]
-    cfg.optimizer_config.grad_clip = dict(max_norm=35, norm_type=2)
-
-    # Initialize wandb and load artifact
-    run = wandb.init()
-    artifact = run.use_artifact(args.wandb_path, type='model')
-    artifact_dir = artifact.download(path_prefix=f'epoch_{args.epoch_number}.pth')
-    cfg.work_dir = artifact_dir
-
-    inference(cfg, args.epoch_number, args.model_config)
-
-
-if __name__ == "__main__":
-    main()
+# 사용 예시
+input_file_path = "submission_faster_rcnn_epoch_30.csv"  # CSV 파일 경로를 여기에 지정
+process_csv_file(input_file_path)
