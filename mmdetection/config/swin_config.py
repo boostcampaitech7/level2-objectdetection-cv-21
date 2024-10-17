@@ -40,9 +40,6 @@ class swin_config(BaseConfig):
         
         self.cfg.model.roi_head.bbox_head['num_classes'] = self.num_classes
         self.cfg.model.roi_head.mask_head['num_classes'] = self.num_classes
-            
-        # 학습 설정
-        self.cfg.runner.max_epochs = 30 # 1 only when smoke-test, otherwise 12 or bigger
         
         return self.cfg
 
