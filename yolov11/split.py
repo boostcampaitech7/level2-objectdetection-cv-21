@@ -1,35 +1,58 @@
 import os
-import shutil
-import random
+import json
+from sklearn.model_selection import train_test_split
 
-def split_train(train_dir, val_dir, val_ratio=0.2):
-    if not os.path.exists(val_dir):
-        os.makedirs(val_dir)
+DATA_DIR = '/data/ephemeral/home/dataset/'
+with open(os.path.join(DATA_DIR, 'train.json')) as f:
+    data = json.load(f)
 
-    images = [f for f in os.listdir(train_dir) if f.endswith(".jpg")]  # 이미지 파일만 선택
+images = data['images']
+annotations = data['annotations']
 
-    # val_ratio에 따라 train 데이터를 섞어서 나누기
-    random.shuffle(images)
-    val_size = int(len(images) * val_ratio)
+# Create a dictionary to map image IDs to their corresponding annotations
+image_annotations = {}
+for annotation in annotations:
+    annotation['segmentation'] = [[0, 0, 0, 0, 0, 0, 0, 0]]
+    image_annotations.setdefault(annotation['image_id'], []).append(annotation)
 
-    val_images = images[:val_size]
-    train_images = images[val_size:]
+# Split the images and their corresponding annotations
+train_images, val_images = train_test_split(images, test_size=0.2, random_state=42)
 
-    print(f"Train set size: {len(train_images)}")
-    print(f"Validation set size: {len(val_images)}")
+train_annotations = []
+for image in train_images:
+    train_annotations.extend(image_annotations[image['id']])
+val_annotations = []
+for image in val_images:
+    val_annotations.extend(image_annotations[image['id']])
 
-    # Validation 파일 이동
-    for img in val_images:
-        img_path = os.path.join(train_dir, img)
-        lbl_path = os.path.join(train_dir, img.replace(".jpg", ".txt"))
+# Create the training and validation JSON objects
+train_data = {
+    'info': data['info'],
+    'licenses': data['licenses'],
+    'images': train_images,
+    'annotations': train_annotations,
+    'categories': data['categories']
+}
+val_data = {
+    'info': data['info'],
+    'licenses': data['licenses'],
+    'images': val_images,
+    'annotations': val_annotations,
+    'categories': data['categories']
+}
 
-        shutil.move(img_path, val_dir)  # 이미지 이동
-        if os.path.exists(lbl_path):
-            shutil.move(lbl_path, val_dir)  # 라벨 파일이 존재하면 같이 이동
+# Remove existing files
+if os.path.exists(os.path.join(DATA_DIR, 'train2.json')):
+    os.remove(os.path.join(DATA_DIR, 'train2.json'))
+    print("Removed the existing train2 json")
+if os.path.exists(os.path.join(DATA_DIR, 'val2.json')):
+    os.remove(os.path.join(DATA_DIR, 'val2.json'))
+    print("Removed the existing val2 json")
 
-# 경로 설정
-train_dir = "/data/ephemeral/home/dataset/train"
-val_dir = "/data/ephemeral/home/dataset/val"
-
-# train 데이터셋을 8:2로 train/val로 나누기
-split_train(train_dir, val_dir, val_ratio=0.2)
+# Save the training and validation JSON objects to file
+with open(os.path.join(DATA_DIR, 'train2.json'), 'w') as f:
+    json.dump(train_data, f)
+    print("Successfully created the train2.json!")
+with open(os.path.join(DATA_DIR, 'val2.json'), 'w') as f:
+    json.dump(val_data, f)
+    print("Successfully created the val2.json!")

@@ -4,7 +4,7 @@ import cv2
 from ultralytics import YOLO, solutions
 from ultralytics.utils.plotting import Annotator, colors
 
-def augment_and_save(image_dir, label_dir, output_dir, model_path, blur_ratio=50):
+def augment_and_save(image_dir, label_dir, output_dir, model_path, blur_ratio=50, class_indices=None):
     """이미지에 객체 카운팅 및 블러링을 적용하고 증강된 이미지를 같은 디렉토리에 저장합니다."""
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
@@ -18,8 +18,8 @@ def augment_and_save(image_dir, label_dir, output_dir, model_path, blur_ratio=50
         img = cv2.imread(image_path)
         assert img is not None, f"이미지를 읽을 수 없습니다: {image_path}"
 
-        # 객체 탐지 수행
-        results = model.predict(img, show=False)
+        # 객체 탐지 수행 (특정 클래스만 필터링)
+        results = model.predict(img, show=False, classes=class_indices)  # classes 옵션 추가
         boxes = results[0].boxes.xyxy.cpu().tolist()
         clss = results[0].boxes.cls.cpu().tolist()
 
@@ -49,11 +49,12 @@ def augment_and_save(image_dir, label_dir, output_dir, model_path, blur_ratio=50
 
     print(f"증강된 이미지와 라벨 파일이 {output_dir}에 저장되었습니다.")
 
-# 증강 실행
+# 증강 실행 (10개의 클래스만 처리되도록 class_indices 설정)
 augment_and_save(
     "/data/ephemeral/home/dataset/train/",
     "/data/ephemeral/home/dataset/train/",  # 원본 라벨과 동일 경로
     "/data/ephemeral/home/dataset/train/",  # 증강된 파일도 동일 경로
     "yolo11x.pt",
-    blur_ratio=50
+    blur_ratio=50,
+    class_indices=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]  # 10개의 클래스만 사용
 )

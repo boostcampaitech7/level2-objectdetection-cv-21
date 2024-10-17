@@ -1,5 +1,5 @@
 train: /data/ephemeral/home/dataset/train/
-val: /data/ephemeral/home/dataset/val/
+val: /data/ephemeral/home/dataset/train/
 
 nc: 10  # 클래스 수
 names: ['General trash', 'Paper', 'Paper pack', 'Metal', 'Glass', 'Plastic', 'Styrofoam', 'Plastic bag', 'Battery', 'Clothing']
