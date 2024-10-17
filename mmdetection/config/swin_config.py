@@ -6,8 +6,8 @@ from mmcv import Config
 
 
 class swin_config(BaseConfig):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, max_epochs=25):
+        super().__init__(max_epochs=max_epochs)
         self.config_dir = '/data/ephemeral/home/mmdetection/configs/swin/mask_rcnn_swin-s-p4-w7_fpn_fp16_ms-crop-3x_coco.py'
         self.model_name = os.path.basename(self.config_dir).split('.')[0]
         try:
