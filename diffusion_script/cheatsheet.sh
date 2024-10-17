@@ -1,10 +1,10 @@
 python3 generate_with_imprior.py
         -a "/data/ephemeral/home/dataset/train.json"
         -i /data/ephemeral/home/dataset/
-        -e "/data/ephemeral/home/media/data/ControlAug/cnet/experiments/cat20_test_1024"
+        -e "/data/ephemeral/home/media/data/ControlAug/cnet/experiments/cat5_blurry_768"
         -l 10
         -s 1
-        -p 1024
+        -p 768
         -m 0
         --vpg_mode HED
         --ckpt_path /data/ephemeral/home/media/wacv/ControlNet/models/control_sd15_hed.pth
