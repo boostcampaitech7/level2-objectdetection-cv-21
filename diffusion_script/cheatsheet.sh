@@ -14,8 +14,9 @@ python3 generate_with_imprior.py \
 
 
 python3 mix_annotations.py \
-        -a "/media/data/coco_fsod/seed${SEED}/${SHOT}shot_novel.json" \
-        -s syn_file="/data/ephemeral/home/media/data/ControlAug/cnet/experiments/cat20_test_realistic/syn_n20_HED_p512_prcat_dfsNone_seed1_imprior" \
-        -t mix_file="/data/ephemeral/home/media/data/ControlAug/cnet/experiments/cat20_test_realistic/mix_n20_HED_p512_prcat_dfsNone_seed1_imprior" \
+        -a "/data/ephemeral/home/dataset/train.json" \
+        --gt_image_folder "/data/ephemeral/home/dataset/" \
+        -s "/data/ephemeral/home/media/data/ControlAug/cnet/experiments/cat20_test_realistic/syn_n20_HED_p512_prcat_dfsNone_seed1_imprior" \
+        -t "/data/ephemeral/home/media/data/ControlAug/cnet/experiments/cat20_test_realistic/mix_n20_HED_p512_prcat_dfsNone_seed1_imprior" \
         -f nofilter \
         -n 20 # 총 원본 이미지 수
