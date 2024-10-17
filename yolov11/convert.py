@@ -47,5 +47,11 @@ def convert_yolo(coco_json, label_output_folder):
 train_json_path = "/data/ephemeral/home/dataset/train.json"
 train_label_output_dir = "/data/ephemeral/home/dataset/labels/train"
 
+# 최종 변환된 json 파일명 변경
+train_aug_json_path = "/data/ephemeral/home/dataset/train_aug.json"
+
 # 변환 실행
 convert_yolo(train_json_path, train_label_output_dir)
+
+# 변환된 파일은 train_aug.json 또는 적절한 이름으로 저장
+print(f"YOLO 형식으로 변환된 라벨이 {train_label_output_dir}에 저장되었습니다. 변환된 JSON 파일은 {train_aug_json_path}에 저장됩니다.")

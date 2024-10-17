@@ -27,9 +27,9 @@ augment_and_save(
     class_indices=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]  # 10개의 클래스만 증강
 )
 
-# 4. 데이터셋 분리 작업 수행 (train.json에서 train2.json, val2.json으로 분리)
+# 4. 데이터셋 분리 작업 수행 (train_split.json, val_split.json으로 분리)
 print("데이터셋 분리 중...")
-split_dataset(train_json_path)
+split_dataset("/data/ephemeral/home/dataset/", test_size=0.2, random_state=42, train_file="train_split.json", val_file="val_split.json")
 
 # 5. YOLO 모델 학습 실행
 # W&B 초기화
@@ -41,7 +41,7 @@ model = YOLO('yolo11x.pt')
 # W&B 콜백 추가 (mAP50 시각화)
 add_wandb_callback(model)
 
-# 데이터 경로 설정 (data.yaml 파일에 원본과 증강된 이미지 경로 추가)
+# 데이터 경로 설정 (train_split.json, val_split.json 사용)
 results = model.train(data='/data/ephemeral/home/github/yolov11/cfg/data.yaml', 
                       epochs=50, 
                       imgsz=512, 
