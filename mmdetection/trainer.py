@@ -14,29 +14,29 @@ from mmdet.utils import get_device
 
 def main():
     """메인 실행 함수"""
-    
+
     # 실험 이름 생성
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     random_code = str(uuid.uuid4())[:5]
-    
+
     # 설정 생성
     max_epochs = 25     # 에폭 설정
-    cfg, model_name, output_dir = create_config('swin_tiny', max_epochs=max_epochs)  # 모델 Config에 epoch 넘김
+    cfg, model_name, output_dir = create_config('fast_rcnn', max_epochs=max_epochs)  # 모델 Config에 epoch 넘김
 
     experiment_dir = os.path.join(output_dir, f"{timestamp}_{random_code}")
     os.makedirs(experiment_dir, exist_ok=True)
     cfg.work_dir = experiment_dir
 
     wandb.init(
-        project="mask_rcnn_swin-t", 
+        project="pseudo",
         dir=experiment_dir,
         name=f'{model_name}_{random_code}',
         config=cfg._cfg_dict.to_dict()
         )
-    
+
     # Wandb에 의한 옵티마이저 하이퍼파라미터 조정
     cfg.optimizer = dict(
-        type='AdamW', 
+        type='AdamW',
         lr=wandb.config.lr,
         weight_decay=wandb.config.weight_decay
         )
@@ -68,7 +68,7 @@ if __name__ == "__main__":
     }
 
 
-    sweep_id = wandb.sweep(sweep=sweep_configuration, project='mask_rcnn_swin-t')
+    sweep_id = wandb.sweep(sweep=sweep_configuration, project='pseudo')
 
 
     wandb.agent(sweep_id, function=main, count=10)
