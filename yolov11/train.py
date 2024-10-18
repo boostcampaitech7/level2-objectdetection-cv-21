@@ -11,6 +11,7 @@ from split import split_dataset  # split.py에서 데이터셋 분리 함수 가
 train_json_path = "/data/ephemeral/home/dataset/train.json"
 train_image_dir = "/data/ephemeral/home/dataset/train"
 train_label_output_dir = "/data/ephemeral/home/dataset/labels/train"
+model_path = "yolo11x.pt"  # 모델 경로 설정
 
 # 2. COCO 형식의 train.json을 YOLO 형식으로 변환
 print("COCO 데이터를 YOLO 형식으로 변환 중...")
@@ -22,7 +23,7 @@ augment_and_save(
     train_image_dir, 
     train_label_output_dir, 
     train_image_dir,  # 원본과 동일 경로에 증강된 이미지 저장
-    "yolo11x.pt", 
+    model_path,  # 모델 경로 추가
     blur_ratio=50,
     class_indices=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]  # 10개의 클래스만 증강
 )
@@ -36,7 +37,7 @@ split_dataset("/data/ephemeral/home/dataset/", test_size=0.2, random_state=42, t
 wandb.init(project="Object Detection")
 
 # YOLO 모델 로드
-model = YOLO('yolo11x.pt')
+model = YOLO(model_path)
 
 # W&B 콜백 추가 (mAP50 시각화)
 add_wandb_callback(model)
