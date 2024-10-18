@@ -18,6 +18,5 @@ Pseudo labeling 작업을 수행한 inference file의 저장 경로입니다.
 
 # 추가로 볼 만한 문서
 
-* [tmux를 사용한 백그라운드 트레이닝](using_tmux_for_background_training.md)
-* [inference guilde.md](https://github.com/boostcampaitech7/level2-objectdetection-cv-21/blob/main/docs/inference_guide.md)
-* [Pseudo Labeling Introduction](https://github.com/boostcampaitech7/level2-objectdetection-cv-21/blob/feat-76/Pseudo-Labeling/tools/Pseudo_Labeling_Introduction.md)
+* [inference guilde](inference_guide.md)
+* [Pseudo Labeling Introduction](Pseudo_Labeling_Introduction.md)
