@@ -1,10 +1,10 @@
 python3 generate_with_imprior.py
-        -a "/data/ephemeral/home/dataset/train.json"
+        -a "/data/ephemeral/home/dataset/train_split.json"
         -i /data/ephemeral/home/dataset/
-        -e "/data/ephemeral/home/media/data/ControlAug/cnet/experiments/cat5_blurry_768"
-        -l 10
+        -e "/data/ephemeral/home/media/data/ControlAug/cnet/experiments/cat1172_random_1024"
+        -l 1172
         -s 1
-        -p 768
+        -p 1024
         -m 0
         --vpg_mode HED
         --ckpt_path /data/ephemeral/home/media/wacv/ControlNet/models/control_sd15_hed.pth
@@ -17,7 +17,7 @@ python3 generate_with_imprior.py
 python3 mix_annotations.py \
         -a "/data/ephemeral/home/dataset/train.json" \
         --gt_image_folder "/data/ephemeral/home/dataset/" \
-        -s "/data/ephemeral/home/media/data/ControlAug/cnet/experiments/cat20_test_realistic/syn_n20_HED_p512_prcat_dfsNone_seed1_imprior" \
-        -t "/data/ephemeral/home/media/data/ControlAug/cnet/experiments/cat20_test_realistic/mix_n20_HED_p512_prcat_dfsNone_seed1_imprior" \
+        -s "/data/ephemeral/home/media/data/ControlAug/cnet/experiments/cat300_inorder_1024/syn_n300_HED_p1024_prcat_dfsNone_seed1_imprior" \
+        -t "/data/ephemeral/home/media/data/ControlAug/cnet/experiments/cat300_inorder_1024/mix_n300_HED_p1024_prcat_dfsNone_seed1_imprior" \
         -f nofilter \
-        -n 20 # 총 생성된 이미지 수
+        -n 1172 # 총 생성된 이미지 수
