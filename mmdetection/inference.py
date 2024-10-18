@@ -84,10 +84,8 @@ def main() -> None:
     cfg, model_name, output_dir = create_config(args.model_config)
     cfg.data.test.test_mode = True
     cfg.model.train_cfg = None
-
     cfg.seed = 2021
     cfg.gpu_ids = [1]
-
     cfg.optimizer_config.grad_clip = dict(max_norm=35, norm_type=2)
 
     # Initialize wandb and load artifact
