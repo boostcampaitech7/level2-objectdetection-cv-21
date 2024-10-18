@@ -1,14 +1,14 @@
-# swin_config.py
+# swin_tiny_config.py
 import os
 
 from .base_config import BaseConfig
 from mmcv import Config
 
 
-class swin_config(BaseConfig):
+class swin_tiny_config(BaseConfig):
     def __init__(self, max_epochs=25):
         super().__init__(max_epochs=max_epochs)
-        self.config_dir = '/data/ephemeral/home/mmdetection/configs/swin/mask_rcnn_swin-s-p4-w7_fpn_fp16_ms-crop-3x_coco.py'
+        self.config_dir = '/data/ephemeral/home/mmdetection/configs/swin/mask_rcnn_swin-t-p4-w7_fpn_1x_coco.py'
         self.model_name = os.path.basename(self.config_dir).split('.')[0]
         try:
             self.cfg = Config.fromfile(self.config_dir)
@@ -36,10 +36,9 @@ class swin_config(BaseConfig):
         # print(self.cfg.data)
         # exit()
 
-        self.cfg.data.samples_per_gpu = 8
+        self.cfg.data.samples_per_gpu = 16
         
         self.cfg.model.roi_head.bbox_head['num_classes'] = self.num_classes
         self.cfg.model.roi_head.mask_head['num_classes'] = self.num_classes
         
         return self.cfg
-
