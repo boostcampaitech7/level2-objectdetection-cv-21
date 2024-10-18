@@ -42,17 +42,17 @@ val_data = {
 }
 
 # Remove existing files
-if os.path.exists(os.path.join(DATA_DIR, 'train2.json')):
-    os.remove(os.path.join(DATA_DIR, 'train2.json'))
-    print("Removed the existing train2 json")
-if os.path.exists(os.path.join(DATA_DIR, 'val2.json')):
-    os.remove(os.path.join(DATA_DIR, 'val2.json'))
-    print("Removed the existing val2 json")
+if os.path.exists(os.path.join(DATA_DIR, 'train_split.json')):
+    os.remove(os.path.join(DATA_DIR, 'train_split.json'))
+    print("Removed the existing train_split json")
+if os.path.exists(os.path.join(DATA_DIR, 'val_split.json')):
+    os.remove(os.path.join(DATA_DIR, 'val_split.json'))
+    print("Removed the existing val_split json")
 
 # Save the training and validation JSON objects to file
-with open(os.path.join(DATA_DIR, 'train2.json'), 'w') as f:
+with open(os.path.join(DATA_DIR, 'train_split.json'), 'w') as f:
     json.dump(train_data, f)
-    print("Successfully created the train2.json!")
-with open(os.path.join(DATA_DIR, 'val2.json'), 'w') as f:
+    print(f"Successfully created the train_split.json! The total size is {len(train_images)}")
+with open(os.path.join(DATA_DIR, 'val_split.json'), 'w') as f:
     json.dump(val_data, f)
-    print("Successfully created the val2.json!")
+    print(f"Successfully created the val_split.json! The total size is {len(val_images)}")
