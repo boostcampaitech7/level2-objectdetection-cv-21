@@ -6,7 +6,7 @@ from mmcv import Config
 
 
 class swin_config(BaseConfig):
-    def __init__(self, max_epochs=25):
+    def __init__(self, max_epochs=30):
         super().__init__(max_epochs=max_epochs)
         self.config_dir = '/data/ephemeral/home/mmdetection/configs/swin/mask_rcnn_swin-s-p4-w7_fpn_fp16_ms-crop-3x_coco.py'
         self.model_name = os.path.basename(self.config_dir).split('.')[0]
@@ -21,6 +21,44 @@ class swin_config(BaseConfig):
         self.cfg.data.train.classes = self.classes
         self.cfg.data.train.img_prefix = self.data_dir
         self.cfg.data.train.ann_file = self.data_dir + 'train2.json' # train json 정보
+
+        self.cfg.data.train.pipeline = [
+            dict(type='LoadImageFromFile'),
+            dict(type='LoadAnnotations', with_bbox=True, with_mask=True),  # 마스크 추가
+            dict(type='PhotoMetricDistortion'),  # 색상 왜곡
+            dict(type='RandomFlip', flip_ratio=0.5),  # 랜덤 플립
+            dict(
+        type='AutoAugment',
+        policies=[[
+            dict(
+                type='Resize',
+                img_scale=[(512, 512), (640, 640), (768, 768), (896, 896), (1024, 1024)],
+                multiscale_mode='value',
+                keep_ratio=True)
+        ],
+                  [
+                      dict(
+                          type='Resize',
+                          img_scale=[(512, 512), (640, 640), (768, 768), (896, 896)],
+                          multiscale_mode='value',
+                          keep_ratio=True),
+                      dict(
+                          type='RandomCrop',
+                          crop_type='absolute_range',
+                          crop_size=(512, 512),
+                          allow_negative_crop=True),
+                      dict(
+                          type='Resize',
+                          img_scale=[(512, 512), (640, 640), (768, 768), (896, 896), (1024, 1024)],
+                          multiscale_mode='value',
+                          override=True,
+                          keep_ratio=True)
+                  ]]),
+            dict(type='Normalize', **self.cfg.img_norm_cfg),
+            dict(type='Pad', size_divisor=32),
+            dict(type='DefaultFormatBundle'),
+            dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels', 'gt_masks']),  # 마스크 수집
+        ]
         
         
         self.cfg.data.val.classes = self.classes
