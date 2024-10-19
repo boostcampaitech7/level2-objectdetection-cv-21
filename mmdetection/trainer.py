@@ -20,15 +20,15 @@ def main():
     random_code = str(uuid.uuid4())[:5]
     
     # 설정 생성
-    max_epochs = 10     # 에폭 설정
-    cfg, model_name, output_dir = create_config('detr', max_epochs=max_epochs)  # 모델 Config에 epoch 넘김
+    max_epochs = 25     # 에폭 설정
+    cfg, model_name, output_dir = create_config('swin_tiny', max_epochs=max_epochs)  # 모델 Config에 epoch 넘김
 
     experiment_dir = os.path.join(output_dir, f"{timestamp}_{random_code}")
     os.makedirs(experiment_dir, exist_ok=True)
     cfg.work_dir = experiment_dir
 
     wandb.init(
-        project="Object Detection", 
+        project="mask_rcnn_swin-t", 
         dir=experiment_dir,
         name=f'{model_name}_{random_code}',
         config=cfg._cfg_dict.to_dict()
@@ -56,7 +56,7 @@ if __name__ == "__main__":
         "method": "bayes",
         "metric": {"goal": "maximize", "name": "val/bbox_mAP_50"},
         "parameters": {
-            "lr": {"max": 0.0003, "min": 0.00001},
+            "lr": {"max": 0.00009, "min": 0.00002},
             "weight_decay": {"max": 0.001, "min": 0.0001}
         },
         "early_terminate":{
@@ -68,7 +68,7 @@ if __name__ == "__main__":
     }
 
 
-    sweep_id = wandb.sweep(sweep=sweep_configuration, project='Object Detection')
+    sweep_id = wandb.sweep(sweep=sweep_configuration, project='mask_rcnn_swin-t')
 
 
     wandb.agent(sweep_id, function=main, count=10)

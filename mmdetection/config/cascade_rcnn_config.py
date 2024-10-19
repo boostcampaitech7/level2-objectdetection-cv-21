@@ -6,8 +6,8 @@ from mmcv import Config
 
 
 class cascade_rcnn_config(BaseConfig):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, max_epochs=30):
+        super().__init__(max_epochs=max_epochs)
         self.config_dir = '/data/ephemeral/home/mmdetection/configs/cascade_rcnn/cascade_rcnn_x101_64x4d_fpn_20e_coco.py'
         self.model_name = os.path.basename(self.config_dir).split('.')[0]
         try:
@@ -34,13 +34,9 @@ class cascade_rcnn_config(BaseConfig):
         self.cfg.data.test.ann_file = self.data_dir + 'test.json' # test json 정보
         self.cfg.data.test.pipeline[1]['img_scale'] = (512,512) # Resize
 
-        # print(self.cfg.data)
-        # exit()
-
         self.cfg.data.samples_per_gpu = 16
+        
         for bbox_head in self.cfg.model.roi_head.bbox_head:
             bbox_head['num_classes'] = self.num_classes
-        # 학습 설정
-        self.cfg.runner.max_epochs = 30 # 1 only when smoke-test, otherwise 12 or bigger
         
         return self.cfg
