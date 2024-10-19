@@ -12,13 +12,10 @@ from mmdet.apis import train_detector
 from mmdet.utils import get_device
 from config import create_config
 
-class TrainingException(Exception):
-    """Training pipeline에서 발생하는 예외를 처리하기 위한 커스텀 예외"""
-    pass
 
 def load_wandb_artifact(artifact_path: str, artifact_type: str = 'model') -> Optional[wandb.Artifact]:
     """
-    Weights & Biases artifact를 불러옵니다.
+    WanDB artifact를 불러옵니다.
 
     Args:
         artifact_path (str): artifact 경로 (예: 'username/project/artifact:version')
@@ -40,7 +37,7 @@ def load_wandb_artifact(artifact_path: str, artifact_type: str = 'model') -> Opt
 
 def setup_wandb(experiment_dir: str, model_name: str, random_code: str, cfg: Config) -> wandb.run:
     """
-    Weights & Biases 설정을 초기화합니다.
+    WanDB 설정을 초기화합니다.
 
     Args:
         experiment_dir (str): 실험 결과가 저장될 디렉토리
@@ -97,18 +94,18 @@ def save_model_as_artifact(run: wandb.run, model_path: str, model_name: str) -> 
     except Exception as e:
         print(f"Failed to save model as artifact: {e}")
 
-def main(input_model_name: str, max_epoch: int, pretrained_artifact_path: Optional[str] = None) -> None:
+def main(model_name: str, max_epoch: int, pretrained_artifact_path: Optional[str] = None) -> None:
     """
     메인 실행 함수
 
     Args:
-        input_model_name (str): 모델 이름
+        model_name (str): 모델 이름
         max_epoch (int): 최대 에폭 수
         pretrained_artifact_path (Optional[str]): 사전 학습된 모델의 artifact 경로
     """
     try:
         # 설정 생성
-        cfg, model_name, output_dir = create_config(input_model_name, max_epochs=max_epoch)
+        cfg, model_name, output_dir = create_config(model_name, max_epochs=max_epoch)
         if not all([cfg, model_name, output_dir]):
             raise ValueError("Invalid configuration values")
 
@@ -162,7 +159,7 @@ def main(input_model_name: str, max_epoch: int, pretrained_artifact_path: Option
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Training pipeline for object detection')
     parser.add_argument('--max_epoch', type=int, default=25, help='Maximum number of epochs')
-    parser.add_argument('--input_model_name', required=True, help='Input model name')
+    parser.add_argument('--model_name', required=True, help='Input model name')
     parser.add_argument('--inf_path', type=str, help='Config file path')
     parser.add_argument('--pretrained_artifact', type=str, help='Path to pretrained model artifact (e.g., username/project/artifact:version)')
     args = parser.parse_args()
@@ -186,7 +183,7 @@ if __name__ == "__main__":
     wandb.agent(
         sweep_id,
         function=lambda: main(
-            args.input_model_name,
+            args.model_name,
             args.max_epoch,
             args.pretrained_artifact
         ),
