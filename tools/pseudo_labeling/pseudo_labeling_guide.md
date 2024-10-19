@@ -10,7 +10,7 @@ Pseudo labeling 작업을 수행한 inference file의 저장 경로입니다.
 
 
 # 사용 방법
-'--input_dir'와 '--input_dir'의 기본설정은 'None'입니다. 때문에 입력하지 않으면 코드는 작동하지 않습니다.
+'--input_dir'와 '--output_path'의 기본설정은 'None'입니다. 때문에 입력하지 않으면 코드는 작동하지 않습니다.
 
 사용 예시입니다.
 
