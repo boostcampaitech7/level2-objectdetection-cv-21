@@ -161,7 +161,7 @@ def main(input_model_name: str, max_epoch: int, pretrained_artifact_path: Option
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Training pipeline for object detection')
-    parser.add_argument('--max_epoch', type=int, default=1, help='Maximum number of epochs')
+    parser.add_argument('--max_epoch', type=int, default=25, help='Maximum number of epochs')
     parser.add_argument('--input_model_name', required=True, help='Input model name')
     parser.add_argument('--inf_path', type=str, help='Config file path')
     parser.add_argument('--pretrained_artifact', type=str, help='Path to pretrained model artifact (e.g., username/project/artifact:version)')
