@@ -12,7 +12,7 @@ train_json_path = "../../dataset/train.json"
 train_image_dir = "../../dataset/train"
 train_label_output_dir = "../../dataset/labels/train"
 augmented_dir = "../../dataset/train_aug"
-model_path = "yolov8x.pt"  # 사전 학습된 YOLOv8x 모델 경로로 수정
+model_path = "yolov11/yolo11x.pt"
 
 # 모델 파일 존재 여부 확인
 if not os.path.exists(model_path):
