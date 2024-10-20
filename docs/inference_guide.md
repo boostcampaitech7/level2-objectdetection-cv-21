@@ -1,5 +1,4 @@
 # 시작하기
-===============
 
 inferece.py는 Wandb서버에 저장된 checkpoint를 불러와 Inference를 진행합니다. 아래는 사용에 필요한 인자와 사용예시를 설명합니다.
 

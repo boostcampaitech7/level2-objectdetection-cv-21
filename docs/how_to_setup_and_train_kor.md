@@ -10,7 +10,8 @@
 이미 설치된 CUDA, PyTorch 및 Torchvision이 있으므로 이러한 종속성을 설치할 필요가 없습니다. 그러나 이 프로젝트에 일부 종속성을 설치해야 합니다. 다음 스텝을 따라하십시오.
 1. ```apt-get update -y&&apt-get install -y libgl1-mesa-glx&&apt-get install -y libglib2.0-0&&apt-get install wget -y&&cd ~&&wget https://aistages-api-public-prod.s3.amazonaws.com/app/Competitions/000325/data/20240902115340/code.tar.gz&&wget https://aistages-api-public-prod.s3.amazonaws.com/app/Competitions/000325/data/data.tar.gz&&tar -zxvf data.tar.gz&&tar --strip-components=1 -xzf code.tar.gz```
 2. requirements.txt의 마지막 줄을 지운다.
-3. ```pip install -r requirements.txt&&mim install mmcv-full==1.7.0&&apt install git-all -y&&pip install lightning==2.1 torch==1.12.1&&pip install "ray[data,train,tune,serve]" wandb&&pip install protobuf==3.19.6&&apt-get install tmux -y&&cd ~/mmdetection&&pip install -v -e .cd /home&&mkdir github&&cd github&&mkdir proj2&&cd proj2```
+3. ```pip install -r requirements.txt&&mim install mmcv-full==1.7.0&&apt install git-all -y&&pip install lightning==2.1 torch==1.12.1&&pip install "ray[data,train,tune,serve]" wandb&&pip install protobuf==3.19.6&&apt-get install tmux -y&&cd ~/mmdetection&&pip install -v -e .cd /home&&mkdir (자기 이름)&&cd (자기 이름)&&mkdir proj2&&cd proj2```
+
 
 이 명령어는 MMDetection, Detectron2, WandB 등의 필요한 종속성을 설치합니다. **새로운 Conda 환경을 Boostcamp 서버에서 만들지 마세요. CUDA는 새 환경에서 설치할 수 없습니다.**
 
