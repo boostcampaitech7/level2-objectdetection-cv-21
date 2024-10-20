@@ -1,5 +1,5 @@
-train: /data/ephemeral/home/dataset/train_split.json  # 분리된 학습 데이터 JSON 파일 경로
-val: /data/ephemeral/home/dataset/val_split.json      # 분리된 검증 데이터 JSON 파일 경로
+train: /data/ephemeral/home/dataset/train_split  # 학습 이미지 디렉토리
+val: /data/ephemeral/home/dataset/val_split      # 검증 이미지 디렉토리
 
 nc: 10  # 클래스 수
 names: ['General trash', 'Paper', 'Paper pack', 'Metal', 'Glass', 'Plastic', 'Styrofoam', 'Plastic bag', 'Battery', 'Clothing']

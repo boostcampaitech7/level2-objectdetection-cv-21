@@ -1,11 +1,12 @@
 import json
 import os
 
-def convert_yolo(coco_json, label_output_folder):
-    # 라벨 저장할 폴더가 존재하지 않으면 생성
-    if not os.path.exists(label_output_folder):
-        os.makedirs(label_output_folder)
-
+def convert_yolo(coco_json, image_folder):
+    """
+    COCO 형식의 JSON 파일을 YOLO 형식의 .txt 파일로 변환하는 함수입니다.
+    :param coco_json: COCO 형식의 JSON 파일 경로
+    :param image_folder: 이미지가 저장된 폴더 경로 (라벨 파일도 이 폴더에 저장)
+    """
     # COCO JSON 파일 로드
     with open(coco_json, 'r') as f:
         coco_data = json.load(f)
@@ -17,41 +18,31 @@ def convert_yolo(coco_json, label_output_folder):
         width = img['width']
         height = img['height']
 
-        # YOLO 라벨 파일을 저장할 경로 설정 (label_output_folder 바로 아래에 저장)
+        # YOLO 라벨 파일을 저장할 경로 설정 (이미지 파일과 같은 폴더에 저장)
         label_file = os.path.splitext(img_file)[0] + '.txt'
-        label_path = os.path.join(label_output_folder, label_file)
-
-        # 디렉토리 확인 및 생성 (파일 저장 전 경로가 없을 경우 생성)
-        label_dir = os.path.dirname(label_path)
-        if not os.path.exists(label_dir):
-            os.makedirs(label_dir)
+        label_path = os.path.join(image_folder, label_file)
 
         # 해당 이미지에 대한 라벨 파일 생성
         with open(label_path, 'w') as label_f:
             for ann in coco_data['annotations']:
                 if ann['image_id'] == img_id:
                     category_id = ann['category_id'] - 1  # YOLO에서는 클래스 ID가 0부터 시작
-                    if category_id >= 0:  # 클래스 ID가 0 이상인 경우에만 저장
-                        bbox = ann['bbox']
+                    if category_id < 0:
+                        print(f"Skipping annotation with invalid category_id: {category_id}")
+                        continue
 
-                        # YOLO 형식으로 변환 (중심 좌표 및 너비, 높이를 정규화)
-                        x_center = (bbox[0] + bbox[2] / 2) / width
-                        y_center = (bbox[1] + bbox[3] / 2) / height
-                        w = bbox[2] / width
-                        h = bbox[3] / height
+                    bbox = ann['bbox']
+                    if bbox[2] <= 0 or bbox[3] <= 0:  # 너비나 높이가 0 이하인 경우 필터링
+                        print(f"Skipping annotation with invalid bbox: {bbox}")
+                        continue
 
-                        # YOLO 형식으로 라벨 파일 작성
-                        label_f.write(f"{category_id} {x_center} {y_center} {w} {h}\n")
+                    # YOLO 형식으로 변환 (중심 좌표 및 너비, 높이를 정규화)
+                    x_center = (bbox[0] + bbox[2] / 2) / width
+                    y_center = (bbox[1] + bbox[3] / 2) / height
+                    w = bbox[2] / width
+                    h = bbox[3] / height
 
-# 학습 및 테스트 데이터를 YOLO 형식으로 변환
-train_json_path = "/data/ephemeral/home/dataset/train.json"
-train_label_output_dir = "/data/ephemeral/home/dataset/labels/train"
+                    # YOLO 형식으로 라벨 파일 작성
+                    label_f.write(f"{category_id} {x_center} {y_center} {w} {h}\n")
 
-# 최종 변환된 json 파일명 변경
-train_aug_json_path = "/data/ephemeral/home/dataset/train_aug.json"
-
-# 변환 실행
-convert_yolo(train_json_path, train_label_output_dir)
-
-# 변환된 파일은 train_aug.json 또는 적절한 이름으로 저장
-print(f"YOLO 형식으로 변환된 라벨이 {train_label_output_dir}에 저장되었습니다. 변환된 JSON 파일은 {train_aug_json_path}에 저장됩니다.")
+    print(f"YOLO 형식으로 변환된 라벨이 {image_folder}에 저장되었습니다.")
