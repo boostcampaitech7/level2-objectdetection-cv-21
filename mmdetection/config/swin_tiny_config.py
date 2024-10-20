@@ -36,7 +36,7 @@ class swin_tiny_config(BaseConfig):
         # print(self.cfg.data)
         # exit()
 
-        self.cfg.data.samples_per_gpu = 16
+        self.cfg.data.samples_per_gpu = 8
         
         self.cfg.model.roi_head.bbox_head['num_classes'] = self.num_classes
         self.cfg.model.roi_head.mask_head['num_classes'] = self.num_classes
