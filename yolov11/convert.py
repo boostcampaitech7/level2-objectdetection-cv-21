@@ -44,11 +44,11 @@ def convert_yolo(coco_json, label_output_folder):
                         label_f.write(f"{category_id} {x_center} {y_center} {w} {h}\n")
 
 # 학습 및 테스트 데이터를 YOLO 형식으로 변환
-train_json_path = "/data/ephemeral/home/dataset/train.json"
-train_label_output_dir = "/data/ephemeral/home/dataset/labels/train"
+train_json_path = "../../dataset/train.json"
+train_label_output_dir = "../../dataset/labels/train"
 
 # 최종 변환된 json 파일명 변경
-train_aug_json_path = "/data/ephemeral/home/dataset/train_aug.json"
+train_aug_json_path = "../../dataset/train_aug.json"
 
 # 변환 실행
 convert_yolo(train_json_path, train_label_output_dir)

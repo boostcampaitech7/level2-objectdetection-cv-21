@@ -1,6 +1,5 @@
 import os
 import wandb
-from wandb.integration.ultralytics import add_wandb_callback
 from ultralytics import YOLO
 from convert import convert_yolo  # convert.py에서 convert_yolo 함수 가져오기
 from augmentation import augment_and_save  # augmentation.py에서 augment_and_save 함수 가져오기
@@ -13,7 +12,11 @@ train_json_path = "../../dataset/train.json"
 train_image_dir = "../../dataset/train"
 train_label_output_dir = "../../dataset/labels/train"
 augmented_dir = "../../dataset/train_aug"
-model_path = "yolo11x.pt"
+model_path = "yolov8x.pt"  # 사전 학습된 YOLOv8x 모델 경로로 수정
+
+# 모델 파일 존재 여부 확인
+if not os.path.exists(model_path):
+    raise FileNotFoundError(f"Model file not found: {model_path}")
 
 # 2. COCO 형식의 train.json을 YOLO 형식으로 변환
 print("COCO 데이터를 YOLO 형식으로 변환 중...")
@@ -29,29 +32,36 @@ augment_and_save(
     label_dir=train_label_output_dir,
     output_dir="../../dataset/train_aug/",
     json_output_path="../../dataset/train_aug.json",
-    model_path="yolo11x.pt",
+    model_path=model_path,  # 수정된 모델 경로 사용
     blur_ratio=50,
     class_indices=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 )
 
 # 4. 데이터셋 분리 작업 수행
 print("데이터셋 분리 중...")
-# split_dataset("/data/ephemeral/home/dataset/", test_size=0.2, random_state=42, train_file="train_split.json", val_file="val_split.json")
+split_dataset("../../dataset/", test_size=0.2, random_state=42, train_file="train_split.json", val_file="val_split.json")
 
 # 5. YOLO 모델 학습 실행
 wandb.init(project="Object Detection")
+
+# 사전 학습된 모델 로드
 model = YOLO(model_path)
-add_wandb_callback(model)
 
-# 데이터 경로 설정 (train_split.json, val_split.json 사용)
+# 모델 학습 및 결과 저장
 try:
-    for batch in data_loader:  # 데이터 로더로부터 배치 데이터 로드
-        batch["cls"] = check_and_adjust_dimensions(batch["cls"])
+    # 모델 학습
+    results = model.train(data='yolov11/cfg/data.yaml',  # 데이터 설정 파일
+                          epochs=50,                     # 에포크 수
+                          imgsz=512,                     # 입력 이미지 크기
+                          batch=16)                      # 배치 크기
 
-    results = model.train(data='/yolov11/cfg/data.yaml', 
-                          epochs=50, 
-                          imgsz=512, 
-                          batch=16)
+    # 학습된 모델 가중치를 저장
+    model.save("yolo11x.pt")
+
+    # 학습 결과를 수동으로 로깅
+    for epoch in range(50):
+        wandb.log({"epoch": epoch, "train/loss": results.metrics["box_loss"]})
+
 except IndexError as e:
     print(f"IndexError 발생: {e}")
 

@@ -8,9 +8,14 @@ from ultralytics.utils.plotting import Annotator, colors
 def augment_and_save(image_dir, label_dir, output_dir, json_output_path, model_path, blur_ratio=50, class_indices=None):
     """이미지에 객체 카운팅 및 블러링을 적용하고 증강된 이미지를 지정된 폴더에 저장한 후, JSON 파일로도 저장"""
     
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
+    if not os.path.exists(model_path):
+        raise FileNotFoundError(f"Model file not found: {model_path}")
 
+    try:
+        model = YOLO(model_path)
+    except EOFError:
+        raise EOFError(f"Model file {model_path} is corrupted or incomplete. Please re-download the file.")
+    
     # 증강된 이미지와 라벨에 대한 정보를 저장할 JSON 데이터 구조
     augmented_data = {
         'images': [],
@@ -91,10 +96,10 @@ def augment_and_save(image_dir, label_dir, output_dir, json_output_path, model_p
 
 # 증강 실행 (10개의 클래스만 처리되도록 class_indices 설정)
 augment_and_save(
-    "/data/ephemeral/home/dataset/train/",
-    "/data/ephemeral/home/dataset/train/",  # 원본 라벨과 동일 경로
-    "/data/ephemeral/home/dataset/train_aug/",  # 증강된 파일을 별도 폴더에 저장
-    "/data/ephemeral/home/dataset/train_aug.json",  # 증강된 데이터의 JSON 파일 경로
+    "../../dataset/train/",
+    "../../dataset/train/",  # 원본 라벨과 동일 경로
+    "../../dataset/train_aug/",  # 증강된 파일을 별도 폴더에 저장
+    "../../dataset/train_aug.json",  # 증강된 데이터의 JSON 파일 경로
     "yolo11x.pt",
     blur_ratio=50,
     class_indices=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]  # 10개의 클래스만 사용
