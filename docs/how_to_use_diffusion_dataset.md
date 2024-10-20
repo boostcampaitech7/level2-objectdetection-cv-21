@@ -8,6 +8,6 @@
 
 
 3. 서버에서 압축 풀기 작업을 수행합니다. <br/>
-	  - ```tar -xvf``` : ".tar" 파일의 압축 풀기를 수행합니다. <br/>
-	  a. ``` tar -xvf diffusion_1172.tar -C ./diffusion_data ``` 를 입력합니다. <br/>
+	  - ``` tar -xvf diffusion_1172.tar -C ./diffusion_data ``` 를 입력합니다. <br/>
+	  a. ```tar -xvf``` : ".tar" 파일의 압축 풀기를 수행합니다. <br/>
 	  b. ```./diffusion_data``` : 압축 풀기를 한 이미지들을 저장할 폴더 경로입니다. 사용자가 변경할 수 있습니다.
