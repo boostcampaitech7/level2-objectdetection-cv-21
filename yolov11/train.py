@@ -2,40 +2,45 @@ import os
 import wandb
 from wandb.integration.ultralytics import add_wandb_callback
 from ultralytics import YOLO
+from convert import convert_yolo
+from split import split_dataset
 
 # Define paths
-train_split_dir = "/data/ephemeral/home/dataset/train_split"  # 학습 이미지가 저장된 디렉토리
-val_split_dir = "/data/ephemeral/home/dataset/val_split"      # 검증 이미지가 저장된 디렉토리
+original_image_dir = "/data/ephemeral/home/dataset/train"  # 원본 이미지가 있는 디렉토리
+train_split_dir = "/data/ephemeral/home/dataset/train_split"  # 학습 이미지가 저장될 디렉토리
+val_split_dir = "/data/ephemeral/home/dataset/val_split"      # 검증 이미지가 저장될 디렉토리
+train_json_path = "/data/ephemeral/home/dataset/train.json"   # COCO 형식 JSON 파일 경로
 data_yaml_path = "/data/ephemeral/home/github/yolov11/cfg/data.yaml"  # data.yaml 파일 경로
 model_path = "yolo11x.pt"  # YOLOv11x 모델 가중치 경로
 
-# data.yaml 파일이 올바르게 설정되어 있는지 확인합니다.
-# 예시 data.yaml 파일:
-# train: /data/ephemeral/home/dataset/train_split
-# val: /data/ephemeral/home/dataset/val_split
-# nc: 10  # 클래스 수
-# names: ['General trash', 'Paper', 'Paper pack', 'Metal', 'Glass', 'Plastic', 'Styrofoam', 'Plastic bag', 'Battery', 'Clothing']
+# Step 1: Convert COCO format to YOLO format
+print("Converting COCO data to YOLO format...")
+convert_yolo(train_json_path, original_image_dir)
+print("Conversion to YOLO format completed.")
 
-# Step 1: W&B 초기화
+# Step 2: Split dataset into train and val
+print("Splitting dataset into train and val...")
+split_dataset(original_image_dir, train_split_dir, val_split_dir)
+print("Dataset split completed.")
+
+# Step 3: Initialize WandB
 wandb.init(project="Object Detection")
 
-# YOLO 모델 로드
+# Load YOLO model
 model = YOLO(model_path)
 
-# W&B 콜백 추가 (mAP50 시각화)
+# Add WandB callback (for mAP50 visualization)
 add_wandb_callback(model)
 
-# Step 2: YOLO 모델 학습 실행
+# Step 4: Train YOLO model
 results = model.train(
-    data=data_yaml_path,   # 수정된 data.yaml 파일 경로
+    data=data_yaml_path,   # data.yaml 파일 경로
     epochs=50,
     imgsz=512,
-    batch=4,
-    name='train_run', # 실험 이름 설정
-    project='Object Detection' # 프로젝트 이름 설정
+    batch=4
 )
 
-# Step 3: W&B 세션 종료
+# Step 5: Finish WandB session
 wandb.finish()
 
 print("Training completed.")

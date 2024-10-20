@@ -50,10 +50,3 @@ def split_dataset(image_dir, train_dir, val_dir, test_size=0.2, random_state=42)
             shutil.move(label_path, os.path.join(val_dir, label_file))
     
     print(f"Train 이미지 수: {len(train_images)}, Val 이미지 수: {len(val_images)}")
-
-# split.py 파일이 직접 실행될 때 테스트 코드 실행
-if __name__ == "__main__":
-    original_image_dir = "/data/ephemeral/home/dataset/train"
-    train_output_dir = "/data/ephemeral/home/dataset/train_split"
-    val_output_dir = "/data/ephemeral/home/dataset/val_split"
-    split_dataset(original_image_dir, train_output_dir, val_output_dir)
