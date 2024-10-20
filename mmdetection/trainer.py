@@ -21,7 +21,7 @@ def main():
 
     # 설정 생성
     max_epochs = 25     # 에폭 설정
-    cfg, model_name, output_dir = create_config('fast_rcnn', max_epochs=max_epochs)  # 모델 Config에 epoch 넘김
+    cfg, model_name, output_dir = create_config('faster_rcnn', max_epochs=max_epochs)  # 모델 Config에 epoch 넘김
 
     experiment_dir = os.path.join(output_dir, f"{timestamp}_{random_code}")
     os.makedirs(experiment_dir, exist_ok=True)

@@ -15,6 +15,7 @@ class faster_rcnn_config(BaseConfig):
         super().__init__(max_epochs=max_epochs)
         self.config_dir = '/data/ephemeral/home/mmdetection/configs/faster_rcnn/faster_rcnn_r101_fpn_1x_coco.py'
         self.model_name = os.path.basename(self.config_dir).split('.')[0]
+        self.data_root = '.dataset' # Customize dataset path
         try:
             self.cfg = Config.fromfile(self.config_dir)
         except Exception as e:
@@ -27,8 +28,8 @@ class faster_rcnn_config(BaseConfig):
         self.cfg.data.train.img_prefix = self.data_dir
         self.cfg.data.train.ann_file = self.data_dir + 'train2.json' # train json 정보
         self.cfg.data.train.pipeline[2]['img_scale'] = (512,512) # Resize
-        
-        
+
+
         self.cfg.data.val.classes = self.classes
         self.cfg.data.val.img_prefix = self.data_dir
         self.cfg.data.val.ann_file = self.data_dir + 'val2.json' # val json 정보
@@ -44,4 +45,3 @@ class faster_rcnn_config(BaseConfig):
         self.cfg.model.roi_head.bbox_head.num_classes = 10
 
         return self.cfg
-
