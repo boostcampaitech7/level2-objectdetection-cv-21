@@ -22,11 +22,43 @@ class test_config(BaseConfig):
 
     def build_config(self):
         self.cfg = self.setup_config(self.cfg)
-        # dataset config 수정
-        self.cfg.data.train.classes = self.classes
-        self.cfg.data.train.img_prefix = self.data_dir
-        self.cfg.data.train.ann_file = self.data_dir + 'train2.json' # train json 정보
-        self.cfg.data.train.pipeline[2]['img_scale'] = (512,512) # Resize
+        # # dataset config 수정
+        # self.cfg.data.train.classes = self.classes
+        # self.cfg.data.train.img_prefix = self.data_dir
+        # self.cfg.data.train.ann_file = self.data_dir + 'train2.json' # train json 정보
+        # # self.cfg.data.train.pipeline[2]['img_scale'] = (512,512) # Resize
+
+        # MultiImageMixDataset으로 데이터셋 변경
+        self.cfg.data.train = dict(
+            type='MultiImageMixDataset',
+            dataset=dict(
+                type='CocoDataset',
+                ann_file=self.data_dir + 'train2.json',
+                img_prefix=self.data_dir,
+                pipeline=[
+                    dict(type='LoadImageFromFile'),
+                    dict(type='LoadAnnotations', with_bbox=True),
+                ],
+                filter_empty_gt=False,
+                classes=self.classes
+            ),
+            pipeline=[
+                # 기존 파이프라인에 Mosaic, RandomAffine, 추가적인 증강 기법을 추가
+                dict(type='Mosaic', img_scale=(512, 512), pad_val=114.0),
+                dict(
+                    type='RandomAffine',
+                    scaling_ratio_range=(0.1, 2),
+                    border=(-512 // 2, -512 // 2)
+                ),                                                                  # Affine 변환
+                dict(type='MixUp', img_scale=(512, 512), ratio_range=(0.8, 1.2)),   # MixUp 데이터 증강
+                dict(type='PhotoMetricDistortion'),                                 # 색상 왜곡  
+                dict(type='RandomFlip', flip_ratio=0.5),
+                dict(type='Normalize', **self.cfg.img_norm_cfg),
+                dict(type='Pad', size_divisor=32),
+                dict(type='DefaultFormatBundle'),
+                dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels']),
+            ]
+        )
         
         self.cfg.data.val.classes = self.classes
         self.cfg.data.val.img_prefix = self.data_dir

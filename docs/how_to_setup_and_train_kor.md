@@ -12,6 +12,7 @@
 2. requirements.txt의 마지막 줄을 지운다.
 3. ```pip install -r requirements.txt&&mim install mmcv-full==1.7.0&&apt install git-all -y&&pip install lightning==2.1 torch==1.12.1&&pip install "ray[data,train,tune,serve]" wandb&&pip install protobuf==3.19.6&&apt-get install tmux -y&&cd ~/mmdetection&&pip install -v -e .cd /home&&mkdir (자기 이름)&&cd (자기 이름)&&mkdir proj2&&cd proj2```
 
+
 이 명령어는 MMDetection, Detectron2, WandB 등의 필요한 종속성을 설치합니다. **새로운 Conda 환경을 Boostcamp 서버에서 만들지 마세요. CUDA는 새 환경에서 설치할 수 없습니다.**
 
 ## 2단계: Weights & Biases 설정
