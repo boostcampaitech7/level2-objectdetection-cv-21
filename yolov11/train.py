@@ -9,10 +9,10 @@ from utils import check_and_adjust_dimensions  # utils.py에서 함수 불러오
 
 # 1. 데이터 변환 및 증강 실행
 # 경로 설정
-train_json_path = "/data/ephemeral/home/dataset/train.json"
-train_image_dir = "/data/ephemeral/home/dataset/train"
-train_label_output_dir = "/data/ephemeral/home/dataset/labels/train"
-augmented_dir = "/data/ephemeral/home/dataset/train_aug"
+train_json_path = "../../dataset/train.json"
+train_image_dir = "../../dataset/train"
+train_label_output_dir = "../../dataset/labels/train"
+augmented_dir = "../../dataset/train_aug"
 model_path = "yolo11x.pt"
 
 # 2. COCO 형식의 train.json을 YOLO 형식으로 변환
@@ -27,8 +27,8 @@ print("데이터 증강 중...")
 augment_and_save(
     image_dir=train_image_dir,
     label_dir=train_label_output_dir,
-    output_dir="/data/ephemeral/home/dataset/train_aug/",
-    json_output_path="/data/ephemeral/home/dataset/train_aug.json",
+    output_dir="../../dataset/train_aug/",
+    json_output_path="../../dataset/train_aug.json",
     model_path="yolo11x.pt",
     blur_ratio=50,
     class_indices=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
@@ -48,7 +48,7 @@ try:
     for batch in data_loader:  # 데이터 로더로부터 배치 데이터 로드
         batch["cls"] = check_and_adjust_dimensions(batch["cls"])
 
-    results = model.train(data='/data/ephemeral/home/github/yolov11/cfg/data.yaml', 
+    results = model.train(data='/yolov11/cfg/data.yaml', 
                           epochs=50, 
                           imgsz=512, 
                           batch=16)
