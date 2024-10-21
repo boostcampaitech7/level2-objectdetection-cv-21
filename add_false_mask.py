@@ -2,8 +2,8 @@ import os
 import json
 from sklearn.model_selection import train_test_split
 
-# DATA_DIR = '/data/ephemeral/home/dataset/'
-DATA_DIR = '/data/ephemeral/home/github/proj2/'
+DATA_DIR = '/data/ephemeral/home/dataset/'
+# DATA_DIR = '/data/ephemeral/home/github/proj2/'
 file_name= 'annotation'
 with open(os.path.join(DATA_DIR, file_name+'.json')) as f:
     data = json.load(f)
@@ -28,10 +28,10 @@ image_data = {
 
 
 # Remove existing files
-if os.path.exists(os.path.join(DATA_DIR, file_name+'fseg.json')):
-    os.remove(os.path.join(DATA_DIR, file_name+'fseg.json'))
+if os.path.exists(os.path.join(DATA_DIR, file_name+'_fseg.json')):
+    os.remove(os.path.join(DATA_DIR, file_name+'_fseg.json'))
     print("Removed the existing false segmentation json")
 # Save the training and validation JSON objects to file
-with open(os.path.join(DATA_DIR, file_name+'fseg.json'), 'w') as f:
+with open(os.path.join(DATA_DIR, file_name+'_fseg.json'), 'w') as f:
     json.dump(image_data, f)
     print("Successfully created the {file_name}_fseg.json!")
