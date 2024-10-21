@@ -39,7 +39,6 @@ results = model.train(
     imgsz=512,
     batch=2,
     amp=True, # Mixed Precision Training
-    accumulate=2 # Gradient Accumulation
 )
 
 # Step 5: Finish WandB session
