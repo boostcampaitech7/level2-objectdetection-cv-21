@@ -56,8 +56,8 @@ if __name__ == "__main__":
         "method": "bayes",
         "metric": {"goal": "maximize", "name": "val/bbox_mAP_50"},
         "parameters": {
-            "lr": {"max": 0.00009, "min": 0.00002},
-            "weight_decay": {"max": 0.001, "min": 0.0001}
+            "lr": 0.00008515,
+            "weight_decay": 0.0003901
         },
         "early_terminate":{
             "type": "hyperband",
@@ -71,4 +71,4 @@ if __name__ == "__main__":
     sweep_id = wandb.sweep(sweep=sweep_configuration, project='mask_rcnn_swin-s')
 
 
-    wandb.agent(sweep_id, function=main, count=5)
+    wandb.agent(sweep_id, function=main, count=1)
