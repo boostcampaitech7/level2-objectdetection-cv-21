@@ -31,14 +31,14 @@ def main():
         project="mask_rcnn_swin-s", 
         dir=experiment_dir,
         name=f'{model_name}_{random_code}',
-        config=cfg._cfg_dict.to_dict()
+        config={"lr": 0.00008515, "weight_decay": 0.0003901}  # 여기에 고정된 값을 넣음
         )
     
     # Wandb에 의한 옵티마이저 하이퍼파라미터 조정
     cfg.optimizer = dict(
         type='AdamW', 
-        lr=wandb.config.lr,
-        weight_decay=wandb.config.weight_decay
+        lr=0.00008515,  # wandb.config.lr 대신 고정된 값 사용
+        weight_decay=0.0003901  # wandb.config.weight_decay 대신 고정된 값 사용
         )
 
     # build_dataset
@@ -66,6 +66,11 @@ if __name__ == "__main__":
             "min_iter": 8,
         }
     }
+
+    # wandb.config에서 Sweep에 따라 설정된 값이 제대로 들어오는지 확인
+    print(f"Learning Rate: {wandb.config.lr}")
+    print(f"Weight Decay: {wandb.config.weight_decay}")
+
 
 
     sweep_id = wandb.sweep(sweep=sweep_configuration, project='mask_rcnn_swin-s')
