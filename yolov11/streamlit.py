@@ -1,5 +1,9 @@
 import csv
+import json
 import streamlit as st
+import matplotlib.pyplot as plt
+from PIL import Image, ImageDraw
+import os
 
 def load_predictions(prediction_file):
     """예측 파일을 로드하는 함수"""
@@ -24,11 +28,17 @@ def show_predictions(predictions, image_dir):
     image = Image.open(img_path)
     draw = ImageDraw.Draw(image)
     
-    # 예측 문자열을 파싱하여 바운딩 박스 표시
-    for pred in prediction_string.strip().split(" "):
-        cls, conf, xmin, ymin, xmax, ymax = map(float, pred.split())
-        draw.rectangle([(xmin, ymin), (xmax, ymax)], outline="blue", width=2)
-        draw.text((xmin, ymin), f"{int(cls)}: {conf:.2f}", fill="blue")
+    # 예측 문자열이 비어 있지 않은 경우에만 바운딩 박스 그리기
+    if prediction_string.strip():
+        for pred in prediction_string.strip().split(" "):
+            # 각 예측 항목은 여섯 개의 값(label, score, xmin, ymin, xmax, ymax)이어야 함
+            values = pred.split()
+            if len(values) != 6:
+                continue  # 값이 6개가 아닐 경우 해당 항목을 건너뜀
+            
+            cls, conf, xmin, ymin, xmax, ymax = map(float, values)
+            draw.rectangle([(xmin, ymin), (xmax, ymax)], outline="blue", width=2)
+            draw.text((xmin, ymin), f"{int(cls)}: {conf:.2f}", fill="blue")
     
     st.image(image, caption=f"Image ID: {selected_image_id}")
 

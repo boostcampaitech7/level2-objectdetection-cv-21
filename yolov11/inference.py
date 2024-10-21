@@ -27,10 +27,10 @@ with open(submission_file, mode="w", newline="") as file:
         for pred in result.boxes:
             cls = int(pred.cls)  # 클래스 ID
             conf = float(pred.conf)  # 신뢰도
-            xmin, ymin, xmax, ymax = map(float, pred.xyxy)  # 바운딩 박스 좌표 (Pascal VOC 형식)
+            xmin, ymin, xmax, ymax = map(float, pred.xyxy[0].cpu().numpy())  # 바운딩 박스 좌표
             
             # Pascal VOC 포맷에 맞게 (label, score, xmin, ymin, xmax, ymax) 형식으로 저장
-            prediction_string += f"{cls} {conf} {xmin} {ymin} {xmax} {ymax} "
+            prediction_string += f"{cls} {conf:.6f} {xmin:.2f} {ymin:.2f} {xmax:.2f} {ymax:.2f} "
         
         # PredictionString이 비어 있으면 빈 문자열로 저장
         writer.writerow([img_id, prediction_string.strip() if prediction_string else ""])
