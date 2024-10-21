@@ -2,6 +2,7 @@ import os
 import datetime
 import uuid
 import wandb
+import argparse
 wandb.login()
 
 from config import create_config
@@ -14,6 +15,10 @@ from mmdet.utils import get_device
 
 def main():
     """메인 실행 함수"""
+    parser = argparse.ArgumentParser(description='Train a detector')
+    parser.add_argument('--model_names', required=True, help='train config file path')
+    parser.add_argument('--project_names', required=True, help='WanDB project name path')
+    args = parser.parse_args()
 
     # 실험 이름 생성
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
@@ -21,14 +26,14 @@ def main():
 
     # 설정 생성
     max_epochs = 25     # 에폭 설정
-    cfg, model_name, output_dir = create_config('faster_rcnn', max_epochs=max_epochs)  # 모델 Config에 epoch 넘김
+    cfg, model_name, output_dir = create_config(args.model_names, max_epochs=max_epochs)  # 모델 Config에 epoch 넘김
 
     experiment_dir = os.path.join(output_dir, f"{timestamp}_{random_code}")
     os.makedirs(experiment_dir, exist_ok=True)
     cfg.work_dir = experiment_dir
 
     wandb.init(
-        project="pseudo",
+        project=args.project_names,
         dir=experiment_dir,
         name=f'{model_name}_{random_code}',
         config=cfg._cfg_dict.to_dict()
@@ -68,7 +73,7 @@ if __name__ == "__main__":
     }
 
 
-    sweep_id = wandb.sweep(sweep=sweep_configuration, project='pseudo')
+    sweep_id = wandb.sweep(sweep=sweep_configuration, project='mask_rcnn_swin-t')
 
 
     wandb.agent(sweep_id, function=main, count=10)
