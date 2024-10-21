@@ -1,4 +1,5 @@
 import os
+import csv
 from ultralytics import YOLO
 
 # 학습된 모델 경로 설정
