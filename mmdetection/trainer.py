@@ -56,8 +56,8 @@ if __name__ == "__main__":
         "method": "grid",
         "metric": {"goal": "maximize", "name": "val/bbox_mAP_50"},
         "parameters": {
-            "lr": {"value": 0.00008515},  # 고정된 값 사용
-            "weight_decay": {"value": 0.0003901}  # 고정된 값 사용
+            "lr": {"value": 0.00008515471383635316},  # 고정된 값 사용
+            "weight_decay": {"value": 0.0003901046364940736}  # 고정된 값 사용
         },
         "early_terminate":{
             "type": "hyperband",
