@@ -33,8 +33,8 @@ class faster_rcnn_x101_config(BaseConfig):
             type='MultiImageMixDataset',
             dataset=dict(
                 type='CocoDataset',
-                ann_file=self.train_data_dir + 'annotation.json',
-                img_prefix=self.train_data_dir + 'images/',
+                ann_file=self.data_dir + 'diffusion_data/annotation.json',
+                img_prefix=self.data_dir + 'diffusion_data/images/',
                 pipeline=[
                     dict(type='LoadImageFromFile'),
                     dict(type='LoadAnnotations', with_bbox=True),
@@ -45,15 +45,15 @@ class faster_rcnn_x101_config(BaseConfig):
             pipeline=[
                 # 기존 파이프라인에 Mosaic, RandomAffine, 추가적인 증강 기법을 추가
                 dict(type='Mosaic', img_scale=(1024, 1024), pad_val=114.0),
-                dict(type='RandomAffine', scaling_ratio_range=(0.1, 2), border=(-512 // 2, -512 // 2)),                                                                          # Affine 변환
-                dict(type='MixUp', img_scale=(1024, 1024), ratio_range=(0.8, 1.2)),           # MixUp 데이터 증강
-                dict(type='PhotoMetricDistortion'),                                         # 색상 왜곡
-                dict(type='Resize', img_scale=[(640, 640), (768, 768)], keep_ratio=True),   # Resize 추가
-                dict(type='RandomCrop', crop_size=(512, 512), allow_negative_crop=True),    # RandomCrop 추가
-                # dict(type='Expand', mean=[123.675, 116.28, 103.53], ratio_range=(1, 4)),    # Expand는 memory가 너무 많이 터져서 삭제
-                dict(type='MinIoURandomCrop', min_ious=(0.1, 0.3, 0.5), min_crop_size=0.3), # MinIoURandomCrop 추가
-                dict(type='CutOut', n_holes=5, cutout_shape=[(50, 50), (75, 75)]),          # CutOut 추가
-                dict(                                                                       # Albu 추가
+                dict(type='RandomAffine', scaling_ratio_range=(0.1, 2), border=(-512 // 2, -512 // 2)), # Affine 변환
+                dict(type='MixUp', img_scale=(1024, 1024), ratio_range=(0.8, 1.2)),                     # MixUp 데이터 증강
+                # dict(type='PhotoMetricDistortion'),                                                   # 색상 왜곡
+                dict(type='Resize', img_scale=[(640, 640), (768, 768)], keep_ratio=True),               # Resize 추가
+                dict(type='RandomCrop', crop_size=(512, 512), allow_negative_crop=True),                # RandomCrop 추가
+                # dict(type='Expand', mean=[123.675, 116.28, 103.53], ratio_range=(1, 4)),              # Expand는 memory가 너무 많이 터져서 삭제
+                dict(type='MinIoURandomCrop', min_ious=(0.1, 0.3, 0.5), min_crop_size=0.3),             # MinIoURandomCrop 추가
+                dict(type='CutOut', n_holes=5, cutout_shape=[(50, 50), (75, 75)]),                      # CutOut 추가
+                dict(                                                                                   # Albu 추가
                     type='Albu',
                     transforms=[
                     dict(type='ShiftScaleRotate', shift_limit=0.0625, scale_limit=0.1, rotate_limit=45, p=0.5),
