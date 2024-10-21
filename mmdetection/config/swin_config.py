@@ -19,18 +19,18 @@ class swin_config(BaseConfig):
         self.cfg = self.setup_config(self.cfg)
         # dataset config 수정
         self.cfg.data.train.classes = self.classes
-        self.cfg.data.train.img_prefix = self.data_dir
-        self.cfg.data.train.ann_file = self.data_dir + 'annotations/train3.json' # train json 정보
+        self.cfg.data.train.img_prefix = self.data_dir + 'diffusion_data'
+        self.cfg.data.train.ann_file = self.data_dir + 'diffusion_data/annotations/annotation.json' # train json 정보
         
         
         self.cfg.data.val.classes = self.classes
         self.cfg.data.val.img_prefix = self.data_dir
-        self.cfg.data.val.ann_file = self.data_dir + 'annotations/val3.json' # val json 정보
+        self.cfg.data.val.ann_file = self.data_dir + 'val2.json' # val json 정보
         self.cfg.data.val.pipeline[1]['img_scale'] = (512,512) # Resize
 
         self.cfg.data.test.classes = self.classes
         self.cfg.data.test.img_prefix = self.data_dir
-        self.cfg.data.test.ann_file = self.data_dir + 'annotations/test.json' # test json 정보
+        self.cfg.data.test.ann_file = self.data_dir + 'test.json' # test json 정보
         self.cfg.data.test.pipeline[1]['img_scale'] = (512,512) # Resize
 
         # print(self.cfg.data)
