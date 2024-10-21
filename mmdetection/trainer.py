@@ -28,17 +28,17 @@ def main():
     cfg.work_dir = experiment_dir
 
     wandb.init(
-        project="mask_rcnn_swin-s", 
+        project="mask_rcnn_swin-s",
         dir=experiment_dir,
         name=f'{model_name}_{random_code}',
-        config={"lr": 0.00008515, "weight_decay": 0.0003901}  # 여기에 고정된 값을 넣음
+        config=cfg._cfg_dict.to_dict()
         )
-    
+
     # Wandb에 의한 옵티마이저 하이퍼파라미터 조정
     cfg.optimizer = dict(
         type='AdamW', 
-        lr=0.00008515,  # wandb.config.lr 대신 고정된 값 사용
-        weight_decay=0.0003901  # wandb.config.weight_decay 대신 고정된 값 사용
+        lr=wandb.config.lr,
+        weight_decay=wandb.config.weight_decay
         )
 
     # build_dataset
@@ -53,11 +53,11 @@ def main():
 
 if __name__ == "__main__":
     sweep_configuration = {
-        "method": "bayes",
+        "method": "grid",
         "metric": {"goal": "maximize", "name": "val/bbox_mAP_50"},
         "parameters": {
-            "lr": 0.00008515,
-            "weight_decay": 0.0003901
+            "lr": {"value": 0.00008515},  # 고정된 값 사용
+            "weight_decay": {"value": 0.0003901}  # 고정된 값 사용
         },
         "early_terminate":{
             "type": "hyperband",
@@ -67,13 +67,6 @@ if __name__ == "__main__":
         }
     }
 
-    # wandb.config에서 Sweep에 따라 설정된 값이 제대로 들어오는지 확인
-    print(f"Learning Rate: {wandb.config.lr}")
-    print(f"Weight Decay: {wandb.config.weight_decay}")
-
-
-
     sweep_id = wandb.sweep(sweep=sweep_configuration, project='mask_rcnn_swin-s')
-
 
     wandb.agent(sweep_id, function=main, count=1)
