@@ -20,7 +20,7 @@ class swin_config(BaseConfig):
         # dataset config 수정
         self.cfg.data.train.classes = self.classes
         self.cfg.data.train.img_prefix = self.data_dir + 'diffusion_data'
-        self.cfg.data.train.ann_file = self.data_dir + 'diffusion_data/annotations/annotation.json' # train json 정보
+        self.cfg.data.train.ann_file = self.data_dir + 'diffusion_data/annotations/annotation_fseg.json' # train json 정보
         
         
         self.cfg.data.val.classes = self.classes
