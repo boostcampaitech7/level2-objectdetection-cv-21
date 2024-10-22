@@ -43,16 +43,17 @@ class test_config(BaseConfig):
                 classes=self.classes
             ),
             pipeline=[
-                # 기존 파이프라인에 Mosaic, RandomAffine, 추가적인 증강 기법을 추가
                 dict(type='Mosaic', img_scale=(512, 512), pad_val=114.0),
                 dict(
                     type='RandomAffine',
                     scaling_ratio_range=(0.1, 2),
                     border=(-512 // 2, -512 // 2)
-                ),                                                                  # Affine 변환
-                dict(type='MixUp', img_scale=(512, 512), ratio_range=(0.8, 1.2)),   # MixUp 데이터 증강
-                dict(type='PhotoMetricDistortion'),                                 # 색상 왜곡  
-                dict(type='RandomFlip', flip_ratio=0.5),
+                ),                                                                          # Affine 변환
+                dict(type='MixUp', img_scale=(512, 512), ratio_range=(0.8, 1.2)),           # MixUp 데이터 증강
+                dict(type='PhotoMetricDistortion'),                                         # 색상 왜곡
+                # dict(type='MinIoURandomCrop', min_ious=(0.1, 0.3, 0.5), min_crop_size=0.3), # MinIoURandomCrop 추가
+                dict(type='Resize', img_scale=(512, 512), keep_ratio=True),
+                dict(type='RandomFlip', flip_ratio=0.5, direction=['vertical']),            # direction이 없으면 horizontal만 함
                 dict(type='Normalize', **self.cfg.img_norm_cfg),
                 dict(type='Pad', size_divisor=32),
                 dict(type='DefaultFormatBundle'),
