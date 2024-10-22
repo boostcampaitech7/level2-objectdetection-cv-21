@@ -32,7 +32,7 @@ def main():
         dir=experiment_dir,
         name=f'{model_name}_{random_code}',
         config=cfg._cfg_dict.to_dict()
-        )
+        ) 
     
     # Wandb에 의한 옵티마이저 하이퍼파라미터 조정
     cfg.optimizer = dict(
