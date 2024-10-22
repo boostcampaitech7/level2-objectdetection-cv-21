@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import argparse
 from ensemble_boxes import weighted_boxes_fusion
 
 def parse_prediction_string(pred_string):
@@ -106,11 +107,13 @@ def apply_wbf_ensemble(submission_path, iou_thr=0.5, skip_box_thr=0.0001):
 
 if __name__ == "__main__":
     # WBF 앙상블 수행
-    submission_path = "/data/ephemeral/home/mmdetection/.Github/Lv.2-CV21/tools/pseudo.csv"
+    parser = argparse.ArgumentParser(description='WBF ensemble 기법을 수행합니다.')
+    parser.add_argument('--submission_path', required=True, help='submission file path')
+    args = parser.parse_args()
     result_df = apply_wbf_ensemble(
-        submission_path,
-        iou_thr=0.5,          # IoU 임계값
-        skip_box_thr=0.0001   # 최소 confidence score
+        args.submission_path,
+        iou_thr=0.3,          # IoU 임계값
+        skip_box_thr=0.01   # 최소 confidence score
     )
 
     # 결과 저장
