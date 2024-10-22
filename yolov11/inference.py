@@ -9,7 +9,7 @@ test_dir = "/data/ephemeral/home/dataset/test"  # 테스트 이미지가 있는 
 convert_yolo(coco_json, test_dir)  # COCO 형식의 JSON 파일을 YOLO 형식으로 변환
 
 # 학습된 모델 경로 설정
-model_path = "/data/ephemeral/home/github/yolov11/runs/detect/train/weights/best.pt"
+model_path = "/data/ephemeral/home/github/yolov11/runs/detect/train3/weights/best.pt"
 
 # 모델 로드
 model = YOLO(model_path)

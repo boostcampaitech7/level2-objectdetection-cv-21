@@ -31,7 +31,7 @@ def convert_yolo(coco_json, image_dir):
             for ann in coco_data['annotations']:
                 if ann['image_id'] == img_id:
                     category_id = ann['category_id']  # COCO에서는 1부터 시작하므로 그대로 사용
-                    if category_id < 1:
+                    if category_id < 0:
                         print(f"Skipping annotation with invalid category_id: {category_id}")
                         continue
 
