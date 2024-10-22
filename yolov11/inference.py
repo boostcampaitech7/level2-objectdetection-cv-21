@@ -1,4 +1,5 @@
 import os
+import csv
 from convert import convert_yolo  # convert.py 파일에서 convert_yolo 함수 가져오기
 from ultralytics import YOLO
 
@@ -9,7 +10,7 @@ test_dir = "/data/ephemeral/home/dataset/test"  # 테스트 이미지가 있는 
 convert_yolo(coco_json, test_dir)  # COCO 형식의 JSON 파일을 YOLO 형식으로 변환
 
 # 학습된 모델 경로 설정
-model_path = "/data/ephemeral/home/github/yolov11/runs/detect/train3/weights/best.pt"
+model_path = "/data/ephemeral/home/github/yolov11/runs/detect/train2/weights/best.pt"
 
 # 모델 로드
 model = YOLO(model_path)
@@ -21,7 +22,7 @@ results = model.predict(source=test_dir, conf=0.25)
 submission_file = "submission_yolo11x.csv"
 with open(submission_file, mode="w", newline="") as file:
     writer = csv.writer(file)
-    writer.writerow(["PredictionString", "image_id"])  # 헤더 작성
+    writer.writerow(["image_id", "PredictionString"])  # 헤더를 "image_id", "PredictionString" 순으로 수정
 
     for result in results:
         img_id = os.path.splitext(os.path.basename(result.path))[0]  # 이미지 파일명에서 확장자 제거
@@ -36,6 +37,6 @@ with open(submission_file, mode="w", newline="") as file:
             prediction_string += f"{cls} {conf:.6f} {xmin:.2f} {ymin:.2f} {xmax:.2f} {ymax:.2f} "
 
         # PredictionString이 비어 있으면 빈 문자열로 저장
-        writer.writerow([prediction_string.strip() if prediction_string else "", img_id])
+        writer.writerow([img_id, prediction_string.strip() if prediction_string else ""])
 
 print(f"Submission file saved as: {submission_file}")
