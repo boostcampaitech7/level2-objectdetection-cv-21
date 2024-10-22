@@ -7,11 +7,11 @@ import os
 import sys
 sys.path.append('/data/ephemeral/home/github/proj2/level2-objectdetection-cv-21/mmdetection')
 
-from config.test_config import test_config
+from config.cascade_rcnn_config import cascade_rcnn_config
 
 
 # Config에서 데이터셋과 파이프라인을 불러옵니다.
-config_obj = test_config(max_epochs=25)  # Adjust parameters if needed
+config_obj = cascade_rcnn_config(max_epochs=25)  # Adjust parameters if needed
 cfg = config_obj.build_config()
 dataset = build_dataset(cfg.data.train)
 
