@@ -21,14 +21,14 @@ def main():
     
     # 설정 생성
     max_epochs = 25     # 에폭 설정
-    cfg, model_name, output_dir = create_config('swin_tiny', max_epochs=max_epochs)  # 모델 Config에 epoch 넘김
+    cfg, model_name, output_dir = create_config('test', max_epochs=max_epochs)  # 모델 Config에 epoch 넘김
 
     experiment_dir = os.path.join(output_dir, f"{timestamp}_{random_code}")
     os.makedirs(experiment_dir, exist_ok=True)
     cfg.work_dir = experiment_dir
 
     wandb.init(
-        project="mask_rcnn_swin-t", 
+        project="faster_rcnn_resnet50", 
         dir=experiment_dir,
         name=f'{model_name}_{random_code}',
         config=cfg._cfg_dict.to_dict()
@@ -53,11 +53,11 @@ def main():
 
 if __name__ == "__main__":
     sweep_configuration = {
-        "method": "bayes",
+        "method": "grid",
         "metric": {"goal": "maximize", "name": "val/bbox_mAP_50"},
         "parameters": {
-            "lr": {"max": 0.00009, "min": 0.00002},
-            "weight_decay": {"max": 0.001, "min": 0.0001}
+            "lr": {"value": 0.0001038807748027827},
+            "weight_decay": {"value": 0.0002186520691074421},
         },
         "early_terminate":{
             "type": "hyperband",
@@ -68,7 +68,7 @@ if __name__ == "__main__":
     }
 
 
-    sweep_id = wandb.sweep(sweep=sweep_configuration, project='mask_rcnn_swin-t')
+    sweep_id = wandb.sweep(sweep=sweep_configuration, project='faster_rcnn_resnet50')
 
 
-    wandb.agent(sweep_id, function=main, count=10)
+    wandb.agent(sweep_id, function=main, count=1)
