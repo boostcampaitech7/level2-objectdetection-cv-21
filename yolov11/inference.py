@@ -6,12 +6,7 @@ from ultralytics import YOLO
 
 def download_best_checkpoint(wandb_path: str, output_dir: str) -> str:
     """wandb에서 best checkpoint를 다운로드하고 파일 경로를 반환합니다."""
-    # run = wandb.init()
-    # artifact = run.use_artifact(wandb_path, type='model')
-    # artifact_dir = artifact.download()
-    
-    # best checkpoint 파일 검색
-    checkpoint_path = '/data/ephemeral/home/github/yolov11/runs/detect/yolo_best.pt'#wandb 안쓰면 체크포인트 경로 쓰기
+    checkpoint_path = '/data/ephemeral/home/github/yolov11/runs/detect/yolo_best.pt'  # wandb 안쓰면 체크포인트 경로 쓰기
     if not os.path.exists(checkpoint_path):
         raise FileNotFoundError(f"Checkpoint file {checkpoint_path} not found in artifact.")
     
@@ -38,6 +33,9 @@ def main():
     # 모델 로드
     model = YOLO(model_path)
 
+    # 클래스 매핑 (data.yaml에 있는 순서대로 매핑)
+    class_names = ['General trash', 'Paper', 'Paper pack', 'Metal', 'Glass', 'Plastic', 'Styrofoam', 'Plastic bag', 'Battery', 'Clothing']
+
     # 예측 실행
     results = model.predict(source=test_dir, conf=0.25)
 
@@ -48,12 +46,17 @@ def main():
         writer.writerow(["PredictionString", "image_id"])  # 헤더 순서 변경
 
         for result in results:
-            img_id = os.path.splitext(os.path.basename(result.path))[0]  # 이미지 파일명에서 확장자 제거
+            img_id = os.path.join("test", os.path.basename(result.path))  # 이미지 파일명에 디렉토리 포함
             prediction_list = []
 
             for pred in result.boxes:
-                cls = int(pred.cls)  # 클래스 ID
+                cls = int(pred.cls)  # 예측된 클래스 ID
                 conf = float(pred.conf)  # 신뢰도
+
+                # 클래스 ID가 유효한 범위인지 확인
+                if cls < 0 or cls >= len(class_names):
+                    print(f"잘못된 클래스 ID: {cls}")
+                    continue  # 잘못된 클래스 ID 건너뜀
 
                 # 예측 결과가 있는지 확인하고 변환
                 if pred.xywh is not None and len(pred.xywh) > 0:
