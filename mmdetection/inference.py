@@ -22,32 +22,24 @@ from config import create_config
 
 def inference(cfg, epoch_number: int, model_config: str) -> None:
     """Run inference on a given model and configuration."""
-    # TTA 설정 추가
-    cfg.model = dict(
-        type='DetTTAModel',
-        module=cfg.model,  # 원래 모델을 module로 전달
-        tta_cfg=dict(
-            nms=dict(type='nms', iou_threshold=0.5),
-            max_per_img=100
-        )
-    )
 
     # TTA 파이프라인 설정
     cfg.data.test.pipeline = [
         dict(type='LoadImageFromFile'),
         dict(
-            type='TestTimeAug',
+            type='MultiScaleFlipAug',
+            img_scale=[(512, 512), (512, 512), (512, 512)],
+            flip=True,
             transforms=[
-                [dict(type='Resize', scale=(512, 512), keep_ratio=True),
-                 dict(type='Resize', scale=(512, 512), keep_ratio=True),
-                 dict(type='Resize', scale=(512, 512), keep_ratio=True)],
-                [dict(type='RandomFlip', prob=0.),
-                 dict(type='RandomFlip', prob=1.)],
-                [dict(
-                    type='PackDetInputs',
-                    meta_keys=('img_id', 'img_path', 'ori_shape', 'img_shape', 
-                              'scale_factor', 'flip', 'flip_direction')
-                )]
+                dict(type='Resize', keep_ratio=True),
+                dict(type='RandomFlip'),
+                dict(type='Normalize', 
+                     mean=[123.675, 116.28, 103.53], 
+                     std=[58.395, 57.12, 57.375], 
+                     to_rgb=True),
+                dict(type='Pad', size_divisor=32),
+                dict(type='ImageToTensor', keys=['img']),
+                dict(type='Collect', keys=['img'])
             ])
     ]
 
@@ -96,7 +88,7 @@ def inference(cfg, epoch_number: int, model_config: str) -> None:
     submission = pd.DataFrame()
     submission['PredictionString'] = prediction_strings
     submission['image_id'] = file_names
-    submission.to_csv(os.path.join(save_dir, f'submission_{model_config}_epoch_{epoch_number}.csv'), index=None)
+    submission.to_csv(os.path.join(save_dir, f'submission_{model_config}_epoch_{epoch_number}_tta.csv'), index=None)
 
     # Remove checkpoint directory
     shutil.rmtree(cfg.work_dir)
@@ -119,6 +111,11 @@ def main() -> None:
     cfg.tta_model = dict(
         type='DetTTAModel',
         tta_cfg=dict(nms=dict(type='nms', iou_threshold=0.5), max_per_img=100)
+    )
+    cfg.img_norm_cfg = dict(
+        mean=[123.675, 116.28, 103.53], 
+        std=[58.395, 57.12, 57.375], 
+        to_rgb=True
     )
 
     # Initialize wandb and load artifact
