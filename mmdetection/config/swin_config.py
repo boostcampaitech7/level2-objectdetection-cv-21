@@ -46,7 +46,7 @@ class swin_config(BaseConfig):
                 dict(type='Normalize', **self.cfg.img_norm_cfg),
                 dict(type='Pad', size_divisor=32),
                 dict(type='DefaultFormatBundle'),
-                dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels']),
+                dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels'])
             ]
         )
 
@@ -72,7 +72,7 @@ class swin_config(BaseConfig):
         self.cfg.data.samples_per_gpu = 8
         
         self.cfg.model.roi_head.bbox_head['num_classes'] = self.num_classes
-        # self.cfg.model.roi_head.mask_head['num_classes'] = self.num_classes           # backbone 모델 faster rcnn으로 변경으로 mask_head 삭제
+        self.cfg.model.roi_head.mask_head = None           # backbone 모델 faster rcnn으로 변경으로 mask_head 삭제
         
         return self.cfg
 
