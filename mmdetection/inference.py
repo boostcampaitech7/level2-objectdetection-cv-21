@@ -22,6 +22,35 @@ from config import create_config
 
 def inference(cfg, epoch_number: int, model_config: str) -> None:
     """Run inference on a given model and configuration."""
+    # TTA 설정 추가
+    cfg.model = dict(
+        type='DetTTAModel',
+        module=cfg.model,  # 원래 모델을 module로 전달
+        tta_cfg=dict(
+            nms=dict(type='nms', iou_threshold=0.5),
+            max_per_img=100
+        )
+    )
+
+    # TTA 파이프라인 설정
+    cfg.data.test.pipeline = [
+        dict(type='LoadImageFromFile'),
+        dict(
+            type='TestTimeAug',
+            transforms=[
+                [dict(type='Resize', scale=(512, 512), keep_ratio=True),
+                 dict(type='Resize', scale=(512, 512), keep_ratio=True),
+                 dict(type='Resize', scale=(512, 512), keep_ratio=True)],
+                [dict(type='RandomFlip', prob=0.),
+                 dict(type='RandomFlip', prob=1.)],
+                [dict(
+                    type='PackDetInputs',
+                    meta_keys=('img_id', 'img_path', 'ori_shape', 'img_shape', 
+                              'scale_factor', 'flip', 'flip_direction')
+                )]
+            ])
+    ]
+
     # Build dataset and dataloader
     dataset = build_dataset(cfg.data.test)
     data_loader = build_dataloader(
@@ -87,6 +116,10 @@ def main() -> None:
     cfg.seed = 2021
     cfg.gpu_ids = [1]
     cfg.optimizer_config.grad_clip = dict(max_norm=35, norm_type=2)
+    cfg.tta_model = dict(
+        type='DetTTAModel',
+        tta_cfg=dict(nms=dict(type='nms', iou_threshold=0.5), max_per_img=100)
+    )
 
     # Initialize wandb and load artifact
     run = wandb.init()
