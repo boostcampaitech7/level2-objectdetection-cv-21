@@ -28,11 +28,19 @@ def inference(cfg, epoch_number: int, model_config: str) -> None:
         dict(type='LoadImageFromFile'),
         dict(
             type='MultiScaleFlipAug',
-            img_scale=[(512, 512), (512, 512), (512, 512)],
+            img_scale=[(512, 512), (786, 786), (1024, 1024)],
             flip=True,
             transforms=[
                 dict(type='Resize', keep_ratio=True),
                 dict(type='RandomFlip'),
+                # dict(type='RandomRotate', angle_range=(-10, 10)),
+                dict(
+                    type='PhotoMetricDistortion',
+                    brightness_delta=32,
+                    contrast_range=(0.8, 1.2),
+                    saturation_range=(0.8, 1.2),
+                    hue_delta=18
+                ),
                 dict(type='Normalize', 
                      mean=[123.675, 116.28, 103.53], 
                      std=[58.395, 57.12, 57.375], 
@@ -83,12 +91,12 @@ def inference(cfg, epoch_number: int, model_config: str) -> None:
         file_names.append(image_info['file_name'])
 
     # Create submission directory and save results
-    save_dir = '../level2-objectdetection-cv-21/mmdetection/output'
+    save_dir = '/data/ephemeral/home/github/proj2/mmdetection/output'
     os.makedirs(save_dir, exist_ok=True)
     submission = pd.DataFrame()
     submission['PredictionString'] = prediction_strings
     submission['image_id'] = file_names
-    submission.to_csv(os.path.join(save_dir, f'submission_{model_config}_epoch_{epoch_number}_tta.csv'), index=None)
+    submission.to_csv(os.path.join(save_dir, f'submission_{model_config}_epoch_{epoch_number}.csv'), index=None)
 
     # Remove checkpoint directory
     shutil.rmtree(cfg.work_dir)
@@ -111,11 +119,6 @@ def main() -> None:
     cfg.tta_model = dict(
         type='DetTTAModel',
         tta_cfg=dict(nms=dict(type='nms', iou_threshold=0.5), max_per_img=100)
-    )
-    cfg.img_norm_cfg = dict(
-        mean=[123.675, 116.28, 103.53], 
-        std=[58.395, 57.12, 57.375], 
-        to_rgb=True
     )
 
     # Initialize wandb and load artifact
