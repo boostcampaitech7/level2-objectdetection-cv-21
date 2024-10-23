@@ -8,10 +8,10 @@ def download_best_checkpoint(wandb_path: str, output_dir: str) -> str:
     """wandb에서 best checkpoint를 다운로드하고 파일 경로를 반환합니다."""
     # run = wandb.init()
     # artifact = run.use_artifact(wandb_path, type='model')
-    artifact_dir = artifact.download() #wandb 안쓰면 체크포인트 경로 쓰기
+    # artifact_dir = artifact.download()
     
     # best checkpoint 파일 검색
-    checkpoint_path = os.path.join(artifact_dir, 'best.pt')
+    checkpoint_path = '/data/ephemeral/home/github/yolov11/runs/detect/yolo_best.pt'#wandb 안쓰면 체크포인트 경로 쓰기
     if not os.path.exists(checkpoint_path):
         raise FileNotFoundError(f"Checkpoint file {checkpoint_path} not found in artifact.")
     
@@ -26,7 +26,9 @@ def main():
     # COCO 형식의 JSON을 YOLO 형식의 라벨로 변환
     coco_json = "/data/ephemeral/home/dataset/test.json"  # COCO JSON 파일 경로
     test_dir = "/data/ephemeral/home/dataset/test"  # 테스트 이미지가 있는 디렉토리
-    convert_yolo(coco_json, test_dir)  # COCO 형식의 JSON 파일을 YOLO 형식으로 변환
+    valid_classes = list(range(10))  # 0부터 9까지의 클래스 설정
+
+    convert_yolo(coco_json, test_dir, valid_classes)  # COCO 형식의 JSON 파일을 YOLO 형식으로 변환
 
     # wandb에서 best checkpoint 다운로드
     wandb_path = 'your-wandb-entity/your-project/your-artifact:latest'  # wandb artifact 경로
@@ -52,7 +54,16 @@ def main():
             for pred in result.boxes:
                 cls = int(pred.cls)  # 클래스 ID
                 conf = float(pred.conf)  # 신뢰도
-                xmin, ymin, xmax, ymax = map(float, pred.xyxy[0].cpu().numpy())  # 바운딩 박스 좌표
+                x_center, y_center, width, height = map(float, pred.xywh[0].cpu().numpy())  # YOLO 형식 좌표
+
+                # (label, score, xmin, ymin, xmax, ymax) 형식으로 추가
+                prediction_list.append((cls, conf, xmin, ymin, xmax, ymax))
+
+                # YOLO 형식을 Pascal VOC 형식으로 변환
+                xmin = x_center - (width / 2)
+                ymin = y_center - (height / 2)
+                xmax = x_center + (width / 2)
+                ymax = y_center + (height / 2)
 
                 # (label, score, xmin, ymin, xmax, ymax) 형식으로 추가
                 prediction_list.append((cls, conf, xmin, ymin, xmax, ymax))

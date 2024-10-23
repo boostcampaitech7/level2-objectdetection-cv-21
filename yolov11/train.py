@@ -78,12 +78,14 @@ def filter_ground_truth(ground_truth, valid_classes):
     return filtered_ground_truth
 
 # WandB 업로드 전에 필터링 적용
-if 'predictions' in results:
-    filtered_predictions = filter_wandb_predictions(results['predictions'], valid_classes)
+if hasattr(results, 'pred'):
+    # 예측값 필터링
+    filtered_predictions = filter_wandb_predictions(results.pred, valid_classes)
     wandb.log({"filtered_predictions": filtered_predictions})
 
-if 'ground_truth' in results:
-    filtered_ground_truth = filter_ground_truth(results['ground_truth'], valid_classes)
+if hasattr(results, 'labels'):
+    # ground-truth 필터링
+    filtered_ground_truth = filter_ground_truth(results.labels, valid_classes)
     wandb.log({"filtered_ground_truth": filtered_ground_truth})
 
 # Step 6: Finish WandB session
