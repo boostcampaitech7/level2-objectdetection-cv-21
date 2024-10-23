@@ -54,33 +54,39 @@ def main():
             for pred in result.boxes:
                 cls = int(pred.cls)  # 클래스 ID
                 conf = float(pred.conf)  # 신뢰도
-                x_center, y_center, width, height = map(float, pred.xywh[0].cpu().numpy())  # YOLO 형식 좌표
 
-                # (label, score, xmin, ymin, xmax, ymax) 형식으로 추가
-                prediction_list.append((cls, conf, xmin, ymin, xmax, ymax))
+                # 예측 결과가 있는지 확인하고 변환
+                if pred.xywh is not None and len(pred.xywh) > 0:
+                    x_center, y_center, width, height = map(float, pred.xywh[0].cpu().numpy())  # YOLO 형식 좌표
 
-                # YOLO 형식을 Pascal VOC 형식으로 변환
-                xmin = x_center - (width / 2)
-                ymin = y_center - (height / 2)
-                xmax = x_center + (width / 2)
-                ymax = y_center + (height / 2)
+                    # YOLO 형식을 Pascal VOC 형식으로 변환
+                    xmin = x_center - (width / 2)
+                    ymin = y_center - (height / 2)
+                    xmax = x_center + (width / 2)
+                    ymax = y_center + (height / 2)
 
-                # (label, score, xmin, ymin, xmax, ymax) 형식으로 추가
-                prediction_list.append((cls, conf, xmin, ymin, xmax, ymax))
+                    # 변환된 좌표를 prediction_list에 추가
+                    prediction_list.append((cls, conf, xmin, ymin, xmax, ymax))
 
-            # 클래스 ID 오름차순으로 정렬
-            prediction_list.sort(key=lambda x: x[0])
+            # 예측 결과가 있는지 확인한 후에 처리
+            if prediction_list:
+                # 클래스 ID 오름차순으로 정렬
+                prediction_list.sort(key=lambda x: x[0])
 
-            # 정렬된 결과를 PredictionString 형식으로 변환
-            prediction_string = " ".join(
-                f"{cls} {conf:.6f} {xmin:.2f} {ymin:.2f} {xmax:.2f} {ymax:.2f}"
-                for cls, conf, xmin, ymin, xmax, ymax in prediction_list
-            )
+                # 정렬된 결과를 PredictionString 형식으로 변환
+                prediction_string = " ".join(
+                    f"{cls} {conf:.6f} {xmin:.2f} {ymin:.2f} {xmax:.2f} {ymax:.2f}"
+                    for cls, conf, xmin, ymin, xmax, ymax in prediction_list
+                )
+            else:
+                # 예측 결과가 없을 경우 빈 문자열로 설정
+                prediction_string = ""
 
-            # PredictionString이 비어 있으면 빈 문자열로 저장
-            writer.writerow([prediction_string.strip() if prediction_string else "", img_id])
+            # PredictionString을 CSV 파일에 저장
+            writer.writerow([prediction_string.strip(), img_id])
 
-    print(f"Submission file saved as: {submission_file}")
+        print(f"Submission file saved as: {submission_file}")
+
 
 if __name__ == "__main__":
     main()
