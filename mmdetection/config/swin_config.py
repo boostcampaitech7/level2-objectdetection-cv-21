@@ -56,23 +56,23 @@ class swin_config(BaseConfig):
             metric=['bbox'],  # 'segm' 제거하고 bbox만 평가
         )
         
+        # 평가 메트릭에서 'segm' 제거
+        self.cfg.evaluation = dict(
+            interval=1,
+            metric=['bbox'],  # 'segm' 제거하고 bbox만 평가
+        )
         self.cfg.data.val.classes = self.classes
         self.cfg.data.val.img_prefix = self.data_dir
         self.cfg.data.val.ann_file = self.data_dir + 'val2.json' # val json 정보
         self.cfg.data.val.pipeline[1]['img_scale'] = (512,512) # Resize
-
         self.cfg.data.test.classes = self.classes
         self.cfg.data.test.img_prefix = self.data_dir
         self.cfg.data.test.ann_file = self.data_dir + 'test.json' # test json 정보
         self.cfg.data.test.pipeline[1]['img_scale'] = (512,512) # Resize
-
         # print(self.cfg.data)
         # exit()
-
         self.cfg.data.samples_per_gpu = 8
-        
         self.cfg.model.roi_head.bbox_head['num_classes'] = self.num_classes
-        # self.cfg.model.roi_head.mask_head['num_classes'] = self.num_classes           # backbone 모델 faster rcnn으로 변경으로 mask_head 삭제
-        
+        self.cfg.model.roi_head.mask_head = None           # backbone 모델 faster rcnn으로 변경으로 mask_head 삭제
         return self.cfg
 

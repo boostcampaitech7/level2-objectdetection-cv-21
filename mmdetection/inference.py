@@ -22,6 +22,35 @@ from config import create_config
 
 def inference(cfg, epoch_number: int, model_config: str) -> None:
     """Run inference on a given model and configuration."""
+
+    # TTA 파이프라인 설정
+    cfg.data.test.pipeline = [
+        dict(type='LoadImageFromFile'),
+        dict(
+            type='MultiScaleFlipAug',
+            img_scale=[(512, 512), (786, 786), (1024, 1024)],
+            flip=True,
+            transforms=[
+                dict(type='Resize', keep_ratio=True),
+                dict(type='RandomFlip'),
+                # dict(type='RandomRotate', angle_range=(-10, 10)),
+                dict(
+                    type='PhotoMetricDistortion',
+                    brightness_delta=32,
+                    contrast_range=(0.8, 1.2),
+                    saturation_range=(0.8, 1.2),
+                    hue_delta=18
+                ),
+                dict(type='Normalize', 
+                     mean=[123.675, 116.28, 103.53], 
+                     std=[58.395, 57.12, 57.375], 
+                     to_rgb=True),
+                dict(type='Pad', size_divisor=32),
+                dict(type='ImageToTensor', keys=['img']),
+                dict(type='Collect', keys=['img'])
+            ])
+    ]
+
     # Build dataset and dataloader
     dataset = build_dataset(cfg.data.test)
     data_loader = build_dataloader(
@@ -62,7 +91,7 @@ def inference(cfg, epoch_number: int, model_config: str) -> None:
         file_names.append(image_info['file_name'])
 
     # Create submission directory and save results
-    save_dir = '../level2-objectdetection-cv-21/mmdetection/output'
+    save_dir = '/data/ephemeral/home/github/proj2/mmdetection/output'
     os.makedirs(save_dir, exist_ok=True)
     submission = pd.DataFrame()
     submission['PredictionString'] = prediction_strings
@@ -87,6 +116,10 @@ def main() -> None:
     cfg.seed = 2021
     cfg.gpu_ids = [1]
     cfg.optimizer_config.grad_clip = dict(max_norm=35, norm_type=2)
+    cfg.tta_model = dict(
+        type='DetTTAModel',
+        tta_cfg=dict(nms=dict(type='nms', iou_threshold=0.5), max_per_img=100)
+    )
 
     # Initialize wandb and load artifact
     run = wandb.init()
