@@ -11,7 +11,7 @@ train_split_dir = "/data/ephemeral/home/dataset/train_split"  # 학습 이미지
 val_split_dir = "/data/ephemeral/home/dataset/val_split"      # 검증 이미지가 저장될 디렉토리
 train_json_path = "/data/ephemeral/home/dataset/train.json"   # COCO 형식 JSON 파일 경로
 data_yaml_path = "/data/ephemeral/home/github/yolov11/cfg/data.yaml"  # data.yaml 파일 경로
-model_path = "yolo11n.pt"  # YOLOv11x 모델 가중치 경로
+model_path = "yolo11x.pt"  # YOLOv11x 모델 가중치 경로
 
 # 유효한 클래스 리스트 설정 (0부터 9까지 10개 클래스)
 valid_classes = list(range(10))
@@ -38,9 +38,9 @@ add_wandb_callback(model)
 # Step 4: Train YOLO model
 results = model.train(
     data=data_yaml_path,   # data.yaml 파일 경로
-    epochs=100,
+    epochs=50,
     imgsz=512,
-    batch=4,
+    batch=2,
     amp=True,  # Mixed Precision Training
 )
 
