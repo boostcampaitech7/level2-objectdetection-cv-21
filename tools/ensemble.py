@@ -178,5 +178,6 @@ if __name__ == "__main__":
     )
 
     # 결과 저장
-    result_df.to_csv("submission_wbf.csv", index=False)
-    print("WBF 앙상블이 완료되었습니다. 결과가 'submission_wbf.csv'에 저장되었습니다.")
+    file_name=f"submission_nms_{args.nms_thr}_wbf_{args.wbf_thr}.csv"
+    result_df.to_csv(file_name, index=False)
+    print(f"WBF 앙상블이 완료되었습니다. 결과가 f{file_name}에 저장되었습니다.")
