@@ -1,7 +1,7 @@
 import os
 import wandb
 from wandb.integration.ultralytics import add_wandb_callback
-from ultralytics import YOLO
+from ultralytics import YOLOWorld
 from ultralytics import RTDETR
 from convert import convert_yolo
 from split import split_dataset
@@ -12,7 +12,7 @@ train_split_dir = "/data/ephemeral/home/dataset/train_split"  # 학습 이미지
 val_split_dir = "/data/ephemeral/home/dataset/val_split"      # 검증 이미지가 저장될 디렉토리
 train_json_path = "/data/ephemeral/home/dataset/train.json"   # COCO 형식 JSON 파일 경로
 data_yaml_path = "/data/ephemeral/home/github/yolov11/cfg/data.yaml"  # data.yaml 파일 경로
-model_path = "rtdetr-l.pt"  # YOLOv11x 모델 가중치 경로
+model_path = "yolov8s-world.pt"  # YOLOv11x 모델 가중치 경로
 
 # 유효한 클래스 리스트 설정 (0부터 9까지 10개 클래스)
 valid_classes = list(range(10))
