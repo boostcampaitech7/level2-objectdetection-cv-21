@@ -31,7 +31,7 @@ print("Dataset split completed.")
 wandb.init(project="Object Detection")
 
 # Load YOLO model
-model = RTDETR(model_path)
+model = YOLOWorld(model_path)
 
 # Add WandB callback (for mAP50 visualization)
 add_wandb_callback(model)

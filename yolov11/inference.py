@@ -2,7 +2,7 @@ import os
 import csv
 import wandb
 from convert import convert_yolo  # convert.py 파일에서 convert_yolo 함수 가져오기
-from ultralytics import RTDETR
+from ultralytics import YOLOWorld
 
 def download_best_checkpoint(wandb_path: str, output_dir: str) -> str:
     """wandb에서 best checkpoint를 다운로드하고 파일 경로를 반환합니다."""
@@ -17,7 +17,7 @@ def download_best_checkpoint(wandb_path: str, output_dir: str) -> str:
     
     # 지정된 출력 디렉토리로 이동
     os.makedirs(output_dir, exist_ok=True)
-    final_checkpoint_path = os.path.join(output_dir, 'rtdetr_best.pt')
+    final_checkpoint_path = os.path.join(output_dir, 'yolov8s-world.pt')
     os.rename(checkpoint_path, final_checkpoint_path)
     
     return final_checkpoint_path
@@ -39,7 +39,7 @@ def main():
     model_path = download_best_checkpoint(wandb_path, output_dir)
 
     # 모델 로드
-    model = RTDETR(model_path)
+    model = YOLOWorld(model_path)
 
     # 클래스 매핑 (data.yaml에 있는 순서대로 매핑)
     class_names = ['General trash', 'Paper', 'Paper pack', 'Metal', 'Glass', 'Plastic', 'Styrofoam', 'Plastic bag', 'Battery', 'Clothing']
