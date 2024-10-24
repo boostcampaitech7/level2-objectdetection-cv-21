@@ -1,7 +1,12 @@
-import pandas as pd
 import argparse
+from tqdm import tqdm
+import pandas as pd
 from ensemble_boxes import nms, soft_nms, weighted_boxes_fusion
 
+def clip_bbox(bbox, image_size):
+    return [
+        max(0.0, min(1.0, x / image_size)) for x in bbox
+    ]
 def parse_prediction_string(pred_string):
     """예측 문자열을 파싱하여 boxes, scores, labels 리스트로 변환"""
     if pd.isna(pred_string):
@@ -23,16 +28,15 @@ def parse_prediction_string(pred_string):
 
         # 이미지 크기로 정규화 (0~1 범위로 변환)
         # 여기서는 예시로 1024x1024 이미지 크기를 가정
-        normalized_bbox = [
-            bbox[0] / 1024,  # x1
-            bbox[1] / 1024,  # y1
-            bbox[2] / 1024,  # x2
-            bbox[3] / 1024   # y2
-        ]
+        normalized_bbox = clip_bbox(bbox, 1024.0)
 
         boxes.append(normalized_bbox)
         scores.append(score)
         labels.append(label)
+    # print(boxes)
+    # print(scores)
+    # print(labels)
+    # exit()
 
     return boxes, scores, labels
 
@@ -42,17 +46,17 @@ def format_prediction_string(boxes, scores, labels):
     for label, score, box in zip(labels, scores, boxes):
         # 박스 좌표를 다시 원래 스케일로 변환
         denorm_box = [
-            box[0] * 1024,  # x1
-            box[1] * 1024,  # y1
-            box[2] * 1024,  # x2
-            box[3] * 1024   # y2
+            box[0] * 1024.0,  # x1
+            box[1] * 1024.0,  # y1
+            box[2] * 1024.0,  # x2
+            box[3] * 1024.0   # y2
         ]
         pred = f"{int(label)} {score:.8f} {' '.join([f'{x:.5f}' for x in denorm_box])}"
         predictions.append(pred)
 
     return ' '.join(predictions)
 
-def apply_ensemble(csv_files, nms_thr=0.1, wbf_thr=0.3, skip_box_thr=0.0001, apply_nms=False, apply_soft_nms=False, apply_wbf=False):
+def apply_ensemble(csv_files, nms_thr=0.1, wbf_thr=0.3, apply_nms=False, apply_soft_nms=False, apply_wbf=False):
     """앙상블 적용"""
     # 각 모델별 예측 데이터프레임을 하나로 병합
     pred_dfs = [pd.read_csv(file) for file in csv_files]
@@ -62,7 +66,8 @@ def apply_ensemble(csv_files, nms_thr=0.1, wbf_thr=0.3, skip_box_thr=0.0001, app
     result_df = pd.DataFrame(columns=['PredictionString', 'image_id'])
 
     # 각 이미지별로 처리
-    for image_id in df['image_id'].unique():
+    print("이미지 별 앙상블 시작...")
+    for image_id in tqdm(df['image_id'].unique()):
         image_preds = df[df['image_id'] == image_id]
 
         # 각 예측에서 박스, 점수, 라벨 추출
@@ -97,7 +102,6 @@ def apply_ensemble(csv_files, nms_thr=0.1, wbf_thr=0.3, skip_box_thr=0.0001, app
                 [labels],
                 weights=None,
                 iou_thr=nms_thr,
-                skip_box_thr=skip_box_thr
                 )
                 nms_boxes_list.append(boxes)
                 nms_scores_list.append(scores)
@@ -119,7 +123,6 @@ def apply_ensemble(csv_files, nms_thr=0.1, wbf_thr=0.3, skip_box_thr=0.0001, app
                 [labels],
                 weights=None,
                 iou_thr=nms_thr,
-                skip_box_thr=skip_box_thr
                 )
                 nms_boxes_list.append(boxes)
                 nms_scores_list.append(scores)
@@ -136,7 +139,6 @@ def apply_ensemble(csv_files, nms_thr=0.1, wbf_thr=0.3, skip_box_thr=0.0001, app
                 labels_list,
                 weights=None,
                 iou_thr=wbf_thr,
-                skip_box_thr=skip_box_thr
             )
         else:
             boxes = [box for boxes in boxes_list for box in boxes]
@@ -171,13 +173,28 @@ if __name__ == "__main__":
         args.csv_files,
         nms_thr=args.nms_thr,
         wbf_thr=args.wbf_thr,          # IoU 임계값. 겹치는 BBox가 많을수록 낮은 값을 선택해야 합니다.
-        skip_box_thr=0.0001,   # 최소 confidence score
         apply_nms=args.nms,
         apply_soft_nms=args.soft_nms,
         apply_wbf=args.wbf
     )
+    
+    if args.nms:
+        nms_type='NMS' 
+    elif args.soft_nms:
+        nms_type='Soft-NMS'
+    else:
+        nms_type='No-NMS'
+    ensemble_type = nms_type+'-'+'WBF' if args.wbf else nms_type
 
     # 결과 저장
+    if not args.nms and not args.soft_nms:
+        args.nms_thr=0.0
+    else:
+        print(f"{nms_type} 앙상블 threshold: {args.nms_thr}")
+    if not args.wbf:
+        args.wbf_thr=0.0
+    else:
+        print(f"WBF 앙상블 threshold: {args.nms_thr}")
     file_name=f"submission_nms_{args.nms_thr}_wbf_{args.wbf_thr}.csv"
     result_df.to_csv(file_name, index=False)
-    print(f"WBF 앙상블이 완료되었습니다. 결과가 {file_name}에 저장되었습니다.")
+    print(f"{ensemble_type} 앙상블이 완료되었습니다. 결과가 {file_name}에 저장되었습니다.")
