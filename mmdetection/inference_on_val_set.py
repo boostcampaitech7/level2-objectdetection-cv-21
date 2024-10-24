@@ -81,7 +81,14 @@ def inference(cfg, epoch_number: int, model_config: str) -> None:
 
     for i, out in enumerate(output):
         prediction_string = ''
-        image_info = coco.loadImgs(coco.getImgIds(imgIds=i))[0]
+
+        # 현재 인덱스에 해당하는 이미지 ID가 coco.getImgIds()에 있는지 확인
+        if i not in img_ids:  # 유효한 이미지 ID가 없으면 건너뜀
+            continue
+
+        # 유효한 img_id로 이미지 정보 가져옴
+        image_info = coco.loadImgs(i)[0] 
+
         for j in range(class_num):
             for o in out[j]:
                 prediction_string += str(j) + ' ' + str(o[4]) + ' ' + str(o[0]) + ' ' + str(o[1]) + ' ' + str(
@@ -91,7 +98,7 @@ def inference(cfg, epoch_number: int, model_config: str) -> None:
         file_names.append(image_info['file_name'])
 
     # Create submission directory and save results
-    save_dir = '/data/ephemeral/home/github/proj2/mmdetection/output'
+    save_dir = '/data/ephemeral/home/suhyun/level2-objectdetection-cv-21/mmdetection/output'        # 경로 재설정 필요
     os.makedirs(save_dir, exist_ok=True)
     submission = pd.DataFrame()
     submission['PredictionString'] = prediction_strings
