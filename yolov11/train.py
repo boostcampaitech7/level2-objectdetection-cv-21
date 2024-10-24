@@ -1,52 +1,95 @@
 import os
 import wandb
 from wandb.integration.ultralytics import add_wandb_callback
-from ultralytics import YOLO
-from convert import convert_yolo  # convert.py에서 convert_yolo 함수 가져오기
-from augmentation import augment_and_save  # augmentation.py에서 augment_and_save 함수 가져오기
-from split import split_dataset  # split.py에서 데이터셋 분리 함수 가져오기
+from ultralytics import YOLOWorld
+from ultralytics import RTDETR
+from convert import convert_yolo
+from split import split_dataset
 
-# 1. 데이터 변환 및 증강 실행
-# 경로 설정
-train_json_path = "/data/ephemeral/home/dataset/train.json"
-train_image_dir = "/data/ephemeral/home/dataset/train"
-train_label_output_dir = "/data/ephemeral/home/dataset/labels/train"
-model_path = "yolo11x.pt"  # 모델 경로 설정
+# Define paths
+original_image_dir = "/data/ephemeral/home/dataset/train"  # 원본 이미지가 있는 디렉토리
+train_split_dir = "/data/ephemeral/home/dataset/train_split"  # 학습 이미지가 저장될 디렉토리
+val_split_dir = "/data/ephemeral/home/dataset/val_split"      # 검증 이미지가 저장될 디렉토리
+train_json_path = "/data/ephemeral/home/dataset/train.json"   # COCO 형식 JSON 파일 경로
+data_yaml_path = "/data/ephemeral/home/github/yolov11/cfg/data.yaml"  # data.yaml 파일 경로
+model_path = "yolov8s-world.pt"  # YOLOv11x 모델 가중치 경로
 
-# 2. COCO 형식의 train.json을 YOLO 형식으로 변환
-print("COCO 데이터를 YOLO 형식으로 변환 중...")
-convert_yolo(train_json_path, train_label_output_dir)
+# 유효한 클래스 리스트 설정 (0부터 9까지 10개 클래스)
+valid_classes = list(range(10))
 
-# 3. 증강 데이터 생성 (원본과 동일 폴더에 증강 이미지 저장)
-print("데이터 증강 중...")
-augment_and_save(
-    train_image_dir, 
-    train_label_output_dir, 
-    train_image_dir,  # 원본과 동일 경로에 증강된 이미지 저장
-    model_path,  # 모델 경로 추가
-    blur_ratio=50,
-    class_indices=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]  # 10개의 클래스만 증강
-)
+# Step 1: Convert COCO format to YOLO format with valid class filtering
+print("Converting COCO data to YOLO format...")
+convert_yolo(train_json_path, original_image_dir, valid_classes)
+print("Conversion to YOLO format completed.")
 
-# 4. 데이터셋 분리 작업 수행 (train_split.json, val_split.json으로 분리)
-print("데이터셋 분리 중...")
-split_dataset("/data/ephemeral/home/dataset/", test_size=0.2, random_state=42, train_file="train_split.json", val_file="val_split.json")
+# Step 2: Split dataset into train and val
+print("Splitting dataset into train and val...")
+split_dataset(original_image_dir, train_split_dir, val_split_dir)
+print("Dataset split completed.")
 
-# 5. YOLO 모델 학습 실행
-# W&B 초기화
+# Step 3: Initialize WandB
 wandb.init(project="Object Detection")
 
-# YOLO 모델 로드
-model = YOLO(model_path)
+# Load YOLO model
+model = YOLOWorld(model_path)
 
-# W&B 콜백 추가 (mAP50 시각화)
+# Add WandB callback (for mAP50 visualization)
 add_wandb_callback(model)
 
-# 데이터 경로 설정 (train_split.json, val_split.json 사용)
-results = model.train(data='/data/ephemeral/home/github/yolov11/cfg/data.yaml', 
-                      epochs=50, 
-                      imgsz=512, 
-                      batch=16)
+# Step 4: Train YOLO model
+results = model.train(
+    data=data_yaml_path,   # data.yaml 파일 경로
+    epochs=50,
+    imgsz=512,
+    batch=2,
+    amp=True,  # Mixed Precision Training
+)
 
-# 학습 완료 후 W&B 세션 종료
+# Step 5: Filter WandB predictions and ground-truth
+def filter_wandb_predictions(predictions, valid_classes):
+    """유효한 클래스만 남도록 WandB 예측 필터링"""
+    filtered_predictions = {}
+    for image_id, pred_string in predictions.items():
+        filtered_pred = []
+        pred_list = pred_string.strip().split(" ")
+        for i in range(0, len(pred_list), 6):
+            values = pred_list[i:i+6]
+            if len(values) != 6:
+                continue
+            cls = int(values[0])
+            if cls in valid_classes:
+                filtered_pred.append(" ".join(values))
+        filtered_predictions[image_id] = " ".join(filtered_pred)
+    return filtered_predictions
+
+def filter_ground_truth(ground_truth, valid_classes):
+    """유효한 클래스만 남도록 ground-truth 필터링"""
+    filtered_ground_truth = {}
+    for image_id, gt_string in ground_truth.items():
+        filtered_gt = []
+        gt_list = gt_string.strip().split(" ")
+        for i in range(0, len(gt_list), 6):
+            values = gt_list[i:i+6]
+            if len(values) != 6:
+                continue
+            cls = int(values[0])
+            if cls in valid_classes:
+                filtered_gt.append(" ".join(values))
+        filtered_ground_truth[image_id] = " ".join(filtered_gt)
+    return filtered_ground_truth
+
+# WandB 업로드 전에 필터링 적용
+if hasattr(results, 'pred'):
+    # 예측값 필터링
+    filtered_predictions = filter_wandb_predictions(results.pred, valid_classes)
+    wandb.log({"filtered_predictions": filtered_predictions})
+
+if hasattr(results, 'labels'):
+    # ground-truth 필터링
+    filtered_ground_truth = filter_ground_truth(results.labels, valid_classes)
+    wandb.log({"filtered_ground_truth": filtered_ground_truth})
+
+# Step 6: Finish WandB session
 wandb.finish()
+
+print("Training completed.")

@@ -1,74 +1,69 @@
+import csv
 import json
 import streamlit as st
 import matplotlib.pyplot as plt
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageFont
 import os
 
-def load_coco_data(coco_file):
-    """COCO 형식의 JSON 파일을 로드하는 함수"""
-    with open(coco_file, "r") as f:
-        return json.load(f)
+def load_predictions(prediction_file):
+    """Load prediction results from a CSV file."""
+    predictions = {}
+    with open(prediction_file, mode="r") as file:
+        reader = csv.reader(file)
+        next(reader)  # Skip the header
+        for row in reader:
+            image_id = row[0]
+            prediction_string = row[1]
+            predictions[image_id] = prediction_string
+    return predictions
 
-def plot_category_distribution(coco_data):
-    """카테고리별 객체 분포를 시각화하는 함수"""
-    st.header("Object Distribution by Category")
-    category_counts = {cat['name']: 0 for cat in coco_data['categories']}
+def show_predictions(predictions, image_dir, class_labels):
+    """Display predicted bounding boxes on the images."""
+    st.header("Predicted Annotations")
     
-    for ann in coco_data['annotations']:
-        category_id = ann['category_id']
-        category_name = next(cat['name'] for cat in coco_data['categories'] if cat['id'] == category_id)
-        category_counts[category_name] += 1
-
-    plt.figure(figsize=(10, 5))
-    plt.bar(category_counts.keys(), category_counts.values(), color="skyblue")
-    plt.xticks(rotation=90)
-    plt.title("Object Distribution by Category")
-    st.pyplot(plt)
-
-def show_image_with_annotations(coco_data, image_dir):
-    """선택된 이미지 및 해당 어노테이션을 표시하는 함수"""
-    st.header("Sample Image with Annotations")
+    selected_image_id = st.selectbox("Select Image ID", list(predictions.keys()))
+    prediction_string = predictions[selected_image_id]
     
-    selected_image_id = st.selectbox("Select Image ID", [img['id'] for img in coco_data['images']])
-    selected_image = next(img for img in coco_data['images'] if img['id'] == selected_image_id)
-
-    img_path = os.path.join(image_dir, selected_image['file_name'])
-    image = Image.open(img_path)
-    
-    # 이미지를 그릴 객체 준비 (바운딩 박스 포함)
+    img_path = os.path.join(image_dir, f"{selected_image_id}.jpg")
+    image = Image.open(img_path).convert("RGB")
     draw = ImageDraw.Draw(image)
-    
-    annotations = [ann for ann in coco_data['annotations'] if ann['image_id'] == selected_image_id]
-    st.write(f"Total Annotations for this Image: {len(annotations)}")
-    
-    for ann in annotations:
-        category_name = next(cat['name'] for cat in coco_data['categories'] if cat['id'] == ann['category_id'])
-        bbox = ann['bbox']
-        draw.rectangle(
-            [(bbox[0], bbox[1]), (bbox[0] + bbox[2], bbox[1] + bbox[3])], 
-            outline="red", width=3
-        )
-        draw.text((bbox[0], bbox[1]), category_name, fill="white")
 
-    st.image(image, caption=f"Image ID: {selected_image['id']}")
+    # Font for drawing text
+    try:
+        font = ImageFont.truetype("arial.ttf", 20)
+    except IOError:
+        font = ImageFont.load_default()
 
-# Streamlit 레이아웃 설정
-st.title("COCO Dataset EDA with Streamlit")
+    # Draw predicted bounding boxes
+    if prediction_string.strip():
+        predictions = prediction_string.strip().split(" ")
+        for i in range(0, len(predictions), 6):
+            # Each prediction consists of (label, score, xmin, ymin, xmax, ymax)
+            cls, conf, xmin, ymin, xmax, ymax = map(float, predictions[i:i+6])
+            label_name = class_labels[int(cls)]
+            draw.rectangle([(xmin, ymin), (xmax, ymax)], outline="blue", width=2)
+            draw.text((xmin, ymin), f"{label_name}: {conf:.2f}", fill="blue", font=font)
 
-# 데이터 로드
-coco_data = load_coco_data("train.json")
+    st.image(image, caption=f"Image ID: {selected_image_id}")
 
-# 데이터셋 통계 출력
-st.header("Dataset Statistics")
-st.write(f"Total Images: {len(coco_data['images'])}")
-st.write(f"Total Annotations: {len(coco_data['annotations'])}")
-st.write(f"Total Categories: {len(coco_data['categories'])}")
+    # Display a bar chart for class label distributions
+    st.subheader("Class Distribution")
+    fig, ax = plt.subplots()
+    ax.barh(class_labels, [predictions.count(f"{i}") for i in range(len(class_labels))], color="skyblue")
+    ax.set_xlabel("Instances")
+    ax.set_ylabel("Class")
+    st.pyplot(fig)
 
-# 카테고리별 객체 분포 시각화
-plot_category_distribution(coco_data)
+# Streamlit app configuration
+st.title("Object Detection - Prediction Viewer")
 
-# 이미지 및 어노테이션 표시
-show_image_with_annotations(coco_data, "train")
+# Load prediction results and class labels
+prediction_file = "submission_yolo11x.csv"
+predictions = load_predictions(prediction_file)
+class_labels = ["General trash", "Paper", "Paper pack", "Metal", "Glass", "Plastic", "Styrofoam", "Plastic bag", "Battery", "Clothing"]
 
-# Streamlit 앱 실행 명령어
-# streamlit run streamlit.py
+# Image directory configuration
+image_dir = "/data/ephemeral/home/dataset/test"
+
+# Display prediction results with Streamlit
+show_predictions(predictions, image_dir, class_labels)
