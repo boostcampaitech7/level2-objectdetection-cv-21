@@ -55,22 +55,11 @@ def main():
 
         for result in results:
             img_id = os.path.join("test", os.path.basename(result.path))  # 이미지 파일명에 디렉토리 포함
-            img_id = os.path.join("test", os.path.basename(result.path))  # 이미지 파일명에 디렉토리 포함
             prediction_list = []
 
             for pred in result.boxes:
                 cls = int(pred.cls)  # 예측된 클래스 ID
-                cls = int(pred.cls)  # 예측된 클래스 ID
                 conf = float(pred.conf)  # 신뢰도
-
-                # 클래스 ID가 유효한 범위인지 확인
-                if cls < 0 or cls >= len(class_names):
-                    print(f"잘못된 클래스 ID: {cls}")
-                    continue  # 잘못된 클래스 ID 건너뜀
-
-                # 예측 결과가 있는지 확인하고 변환
-                if pred.xywh is not None and len(pred.xywh) > 0:
-                    x_center, y_center, width, height = map(float, pred.xywh[0].cpu().numpy())  # YOLO 형식 좌표
 
                 # 클래스 ID가 유효한 범위인지 확인
                 if cls < 0 or cls >= len(class_names):
@@ -94,10 +83,6 @@ def main():
             if prediction_list:
                 # 클래스 ID 오름차순으로 정렬
                 prediction_list.sort(key=lambda x: x[0])
-            # 예측 결과가 있는지 확인한 후에 처리
-            if prediction_list:
-                # 클래스 ID 오름차순으로 정렬
-                prediction_list.sort(key=lambda x: x[0])
 
                 # 정렬된 결과를 PredictionString 형식으로 변환
                 prediction_string = " ".join(
@@ -110,10 +95,7 @@ def main():
 
             # PredictionString을 CSV 파일에 저장
             writer.writerow([prediction_string.strip(), img_id])
-            # PredictionString을 CSV 파일에 저장
-            writer.writerow([prediction_string.strip(), img_id])
 
-        print(f"Submission file saved as: {submission_file}")
         print(f"Submission file saved as: {submission_file}")
 
 

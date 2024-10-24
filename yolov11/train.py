@@ -39,7 +39,7 @@ add_wandb_callback(model)
 # Step 4: Train YOLO model
 results = model.train(
     data=data_yaml_path,   # data.yaml 파일 경로
-    epochs=80,
+    epochs=50,
     imgsz=512,
     batch=2,
     amp=True,  # Mixed Precision Training
