@@ -52,7 +52,7 @@ def format_prediction_string(boxes, scores, labels):
 
     return ' '.join(predictions)
 
-def apply_ensemble(csv_files, nms_thr=0.1, wbf_thr=0.3, skip_box_thr=0.0001, nms=False, soft_nms=False, wbf=False):
+def apply_ensemble(csv_files, nms_thr=0.1, wbf_thr=0.3, skip_box_thr=0.0001, apply_nms=False, apply_soft_nms=False, apply_wbf=False):
     """앙상블 적용"""
     # 각 모델별 예측 데이터프레임을 하나로 병합
     pred_dfs = [pd.read_csv(file) for file in csv_files]
@@ -85,7 +85,7 @@ def apply_ensemble(csv_files, nms_thr=0.1, wbf_thr=0.3, skip_box_thr=0.0001, nms
             continue
 
         # NMS 적용
-        if nms:
+        if apply_nms:
             nms_boxes_list = []
             nms_scores_list = []
             nms_labels_list = []
@@ -107,7 +107,7 @@ def apply_ensemble(csv_files, nms_thr=0.1, wbf_thr=0.3, skip_box_thr=0.0001, nms
             labels_list = nms_labels_list
 
         # 또는 Soft-NMS 적용
-        elif soft_nms:
+        elif apply_soft_nms:
             nms_boxes_list = []
             nms_scores_list = []
             nms_labels_list = []
@@ -129,7 +129,7 @@ def apply_ensemble(csv_files, nms_thr=0.1, wbf_thr=0.3, skip_box_thr=0.0001, nms
             labels_list = nms_labels_list
 
         # WBF 적용
-        if wbf:
+        if apply_wbf:
             boxes, scores, labels = weighted_boxes_fusion(
                 boxes_list,
                 scores_list,
@@ -172,12 +172,12 @@ if __name__ == "__main__":
         nms_thr=args.nms_thr,
         wbf_thr=args.wbf_thr,          # IoU 임계값. 겹치는 BBox가 많을수록 낮은 값을 선택해야 합니다.
         skip_box_thr=0.0001,   # 최소 confidence score
-        nms=args.nms,
-        soft_nms=args.soft_nms,
-        wbf=args.wbf
+        apply_nms=args.nms,
+        apply_soft_nms=args.soft_nms,
+        apply_wbf=args.wbf
     )
 
     # 결과 저장
     file_name=f"submission_nms_{args.nms_thr}_wbf_{args.wbf_thr}.csv"
     result_df.to_csv(file_name, index=False)
-    print(f"WBF 앙상블이 완료되었습니다. 결과가 f{file_name}에 저장되었습니다.")
+    print(f"WBF 앙상블이 완료되었습니다. 결과가 {file_name}에 저장되었습니다.")
