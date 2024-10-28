@@ -20,7 +20,7 @@
 <br></br>
 ## Member <a id = 'Member'></a>
 
-|김성주|김보현|윤남규|정수현|김한얼|허민석|
+김성주 김보현 윤남규 정수현 김한얼 허민석
 ![week8](https://github.com/user-attachments/assets/3d0a21fb-9210-41b6-aba3-fc9588ea8f60)
 
 <br></br>
