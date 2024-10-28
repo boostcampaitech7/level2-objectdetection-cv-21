@@ -22,7 +22,7 @@
 <!-- - **Annotations :** Image size, class,  -->
 
 <!-- <br/> -->
-# Team CV-01
+# Team CV-21
 
 ## 👬🏼 Members
 <table>
@@ -73,8 +73,8 @@
 |Name|Roles|
 |:-------:|:--------------------------------------------------------------:|
 |Common| Model Training, Hypothesis test         |
-|김보현| |
-|김성주| |
+|김보현| EDA, Model search, Induce Ultralytics, Induce Diffusion augmentation
+|김성주| Data feature analysis, Enhanced evaluation accuracy, Implemention data augmentation technique
 |김한얼| Construct pipeline, Code Refactorization, Schedule managemenet, Workfload manaagement |
 |윤남규| Research tools, Data curation & augmentation, Pipeline refatorization |
 |정수현| Model search, Hyperparameter tuning, Data augmentation|
@@ -327,3 +327,15 @@ Frameworks : Detectron2 v0.6, Ultralytics v8.1, mmDetection v3.3.0
     <sup> mAP_50 Test dataset(Public) </sup>
 </div>
 </center>
+
+</br>
+
+# 📝  WrapUp Reports
+<a href="https://boyamie.github.io/reports/Object Det_CV_팀 리포트(21조).pdf">
+  <img src="https://img.shields.io/badge/Final_WrapUp_Report-white?style=for-the-badge&logo=adobeacrobatreader&logoColor=red" alt="ObjectDetection report">
+</a>
+
+<a href="https://boyamie.github.io/reports/ODcv21.pdf">
+  <img src="https://img.shields.io/badge/Final_WrapUp_PPT-white?style=for-the-badge&logo=microsoftpowerpoint&logoColor=red" alt="ObjectDetection PPT">
+</a>
+<br>

@@ -52,7 +52,14 @@
 
 <br></br>
 ## Wrap Reports <a id = 'Wrap Reports'></a>
-아직 추가를 못했네요
+<a href="https://boyamie.github.io/reports/Object Det_CV_팀 리포트(21조).pdf">
+  <img src="https://img.shields.io/badge/Final_WrapUp_Report-white?style=for-the-badge&logo=adobeacrobatreader&logoColor=red" alt="ObjectDetection report">
+</a>
+
+<a href="https://boyamie.github.io/reports/ODcv21.pdf">
+  <img src="https://img.shields.io/badge/Final_WrapUp_PPT-white?style=for-the-badge&logo=microsoftpowerpoint&logoColor=red" alt="ObjectDetection PPT">
+</a>
+<br>
 
 <br></br>
 
