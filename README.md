@@ -20,7 +20,7 @@
 <br></br>
 ## Member <a id = 'Member'></a>
 
-|김성주|김보현|윤남규|정수현|김한얼|허민석|
+김성주 김보현 윤남규 정수현 김한얼 허민석
 ![week8](https://github.com/user-attachments/assets/3d0a21fb-9210-41b6-aba3-fc9588ea8f60)
 
 <br></br>
@@ -52,7 +52,14 @@
 
 <br></br>
 ## Wrap Reports <a id = 'Wrap Reports'></a>
-아직 추가를 못했네요
+<a href="https://boyamie.github.io/reports/Object Det_CV_팀 리포트(21조).pdf">
+  <img src="https://img.shields.io/badge/Final_WrapUp_Report-white?style=for-the-badge&logo=adobeacrobatreader&logoColor=red" alt="ObjectDetection report">
+</a>
+
+<a href="https://boyamie.github.io/reports/ODcv21.pdf">
+  <img src="https://img.shields.io/badge/Final_WrapUp_PPT-white?style=for-the-badge&logo=microsoftpowerpoint&logoColor=red" alt="ObjectDetection PPT">
+</a>
+<br>
 
 <br></br>
 
