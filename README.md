@@ -6,7 +6,7 @@
 - [Collaboration](#Collaboration)   
 - [Approach](#Approach)
 - [EDA](#EDA)
-- [Wrap Reports](#Wrap Reports)
+- [Wrap Reports](#WrapReports)
 - [File Tree](#filetree)
 - [Usage](#Code)
 
@@ -51,7 +51,7 @@
 ![labels](https://github.com/user-attachments/assets/f3e551bd-1b4e-41ee-ae34-78d37ffd363c)
 
 <br></br>
-## Wrap Reports <a id = 'Wrap Reports'></a>
+## WrapReports <a id = 'WrapReports'></a>
 <a href="https://boyamie.github.io/reports/Object Det_CV_팀 리포트(21조).pdf">
   <img src="https://img.shields.io/badge/Final_WrapUp_Report-white?style=for-the-badge&logo=adobeacrobatreader&logoColor=red" alt="ObjectDetection report">
 </a>
